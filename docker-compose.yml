@@ -1,0 +1,44 @@
+# 只起数据库；应用用 `node cmd/server.mjs` 跑在宿主机（DESIGN §18 验收口径）
+# PG 映射到 5433、MySQL 映射到 3308 —— 避开宿主机可能已占用的默认端口
+services:
+  pg:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: newerp
+      POSTGRES_PASSWORD: newerp
+      POSTGRES_DB: newerp
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U newerp -d newerp']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mysql:
+    profiles: ['mysql']
+    image: mysql:8.0
+    command: ['--default-time-zone=+00:00', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_0900_ai_ci']
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: newerp
+      MYSQL_USER: newerp
+      MYSQL_PASSWORD: newerp
+      TZ: UTC
+    ports:
+      - '3308:3306'
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-unewerp', '-pnewerp']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
+  mysqldata:

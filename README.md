@@ -8,8 +8,39 @@
 - **多租户**：共享库共享表 + `tenant_id`，跨租户引用物理上不可能
 - **许可证**：AGPL-3.0
 
-唯一权威文档：[`docs/DESIGN.md`](docs/DESIGN.md)（v0.4）
+唯一权威文档：[`docs/DESIGN.md`](docs/DESIGN.md)（v0.4）· M0 细化：[`docs/M0-DESIGN.md`](docs/M0-DESIGN.md)
 
 ## 状态
 
-M0 之前 —— 仓库只有设计文档。
+M0 · S2 完成 —— HTTP 骨架 + 双库适配 + 迁移生成器（11 表）
+
+## 起本地环境
+
+```bash
+npm i
+cp .env.example .env              # 端口被占用就改 PORT / DB_PORT
+docker compose up -d              # Postgres 16 → 127.0.0.1:5433
+node cmd/migrate.mjs up           # 空库建表
+node cmd/migrate.mjs check        # 声明 vs 实际库结构，漂移即非零退出
+node --test                       # 用例
+node cmd/server.mjs               # GET /healthz
+```
+
+第二库（MySQL 8.0 → 127.0.0.1:3308）：
+
+```bash
+docker compose --profile mysql up -d
+DB_DRIVER=mysql DB_PORT=3308 node cmd/migrate.mjs up
+DB_DRIVER=mysql DB_PORT=3308 node cmd/migrate.mjs check
+```
+
+## 改表结构的唯一流程
+
+1. 改 `schema/*.mjs`（表结构单真源）
+2. `node cmd/migrate.mjs gen 0002_add_xxx` → 生成 `migrations/{pg,mysql}/0002_*.sql`，**两份都提交**
+3. `node cmd/migrate.mjs up`，再 `check`
+4. **不要手改已应用的迁移文件** —— checksum 会拦住；要改就新增 000N
+
+## 分层铁律
+
+`api/` 无 SQL · `store/` 无业务判断 · `svc/` 唯一开事务处 · 租户表 SQL 必带 `$t`

@@ -1,0 +1,646 @@
+{
+  "auth_user": {
+    "name": "auth_user",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "email",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "pwd_hash",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "pwd_salt",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "display_name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [
+      [
+        "email"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
+  "org_tenant": {
+    "name": "org_tenant",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "slug",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "plan",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "join_policy",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [
+      [
+        "slug"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
+  "platform_settings": {
+    "name": "platform_settings",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "setting_key",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "setting_value",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "setting_key"
+    ],
+    "uniq": [],
+    "index": [],
+    "fk": []
+  },
+  "login_attempt": {
+    "name": "login_attempt",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "kind",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ident",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ip",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "ok",
+        "t": "bool",
+        "notNull": true
+      },
+      {
+        "n": "at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "ident",
+        "at"
+      ],
+      [
+        "ip",
+        "at"
+      ]
+    ],
+    "fk": []
+  },
+  "auth_session": {
+    "name": "auth_session",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "user_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "expires_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "ip",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "ua",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "user_id"
+      ],
+      [
+        "expires_at"
+      ]
+    ],
+    "fk": []
+  },
+  "org_membership": {
+    "name": "org_membership",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "user_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "role_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "joined_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "user_id"
+    ],
+    "uniq": [],
+    "index": [],
+    "fk": []
+  },
+  "auth_role": {
+    "name": "auth_role",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "scope",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
+  "tenant_invite": {
+    "name": "tenant_invite",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "email",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "role_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "expires_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "used_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "created_by",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "email"
+      ]
+    ],
+    "fk": []
+  },
+  "party": {
+    "name": "party",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "party_type",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "tax_no",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "contact_name",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "phone",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "email",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "addr",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "remark",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "name"
+      ],
+      [
+        "tenant_id",
+        "party_type",
+        "status"
+      ]
+    ],
+    "fk": []
+  },
+  "party_contact": {
+    "name": "party_contact",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "party_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "phone",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "email",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "title",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "is_primary",
+        "t": "bool",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "party_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "party_id"
+        ],
+        "ref": "party",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "audit_log": {
+    "name": "audit_log",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "who_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "module",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "action",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ref_type",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "ref_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "before_json",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "after_json",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "trace_id",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "at"
+      ],
+      [
+        "tenant_id",
+        "ref_type",
+        "ref_id"
+      ]
+    ],
+    "fk": []
+  }
+}

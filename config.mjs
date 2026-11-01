@@ -11,9 +11,19 @@ const int = (v, d) => {
   return Number.isFinite(n) ? n : d
 }
 
+const driver = process.env.DB_DRIVER === 'mysql' ? 'mysql' : 'pg'
+
 export const config = {
   env: process.env.NODE_ENV ?? 'development',
   host: process.env.HOST ?? '0.0.0.0',
   port: int(process.env.PORT, 8080),
   version: /** @type {string} */ (pkg.version),
+  db: {
+    driver: /** @type {'pg' | 'mysql'} */ (driver),
+    host: process.env.DB_HOST ?? '127.0.0.1',
+    port: int(process.env.DB_PORT, driver === 'mysql' ? 3306 : 5432),
+    user: process.env.DB_USER ?? 'newerp',
+    password: process.env.DB_PASSWORD ?? '',
+    database: process.env.DB_NAME ?? 'newerp',
+  },
 }
