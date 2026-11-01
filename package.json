@@ -1,0 +1,25 @@
+{
+  "name": "newerp",
+  "version": "0.0.1",
+  "private": true,
+  "description": "信息化集成企业管理系统 —— 零框架零 ORM 多租户 ERP",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node cmd/server.mjs",
+    "dev": "node --watch cmd/server.mjs",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "AGPL-3.0"
+}
