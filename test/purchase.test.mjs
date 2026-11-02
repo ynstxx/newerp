@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
-import { close, connect, exec, one } from '../db/index.mjs'
+import { close, connect, exec, one, withTx } from '../db/index.mjs'
 import { createTenant } from '../svc/tenant.mjs'
 import { makeApp, jsonOf } from './helpers.mjs'
 
@@ -577,4 +577,51 @@ test('台账幂等与并发：重复登记应收 409、并发核销不超未结�
   const bal = await jsonOf(balRes)
   assert.equal(balRes.status, 200)
   assert.equal(Number(bal.balance), 200)
+})
+
+test('钩子失败：单据落 failed + 原因可查，修好后可重新提交审批', async (t) => {
+  if (!dbUp) return t.skip('需要数据库')
+  const { runFailed } = await import('../svc/approval_hooks.mjs')
+
+  const party = await createParty(cookieA, slugA, `HOOK-${run}`)
+  const item = await createItem(cookieA, slugA, `HOOK-I-${run}`)
+  const poRes = await post(
+    '/api/purchase-orders',
+    { code: `PO-HOOK-${run}`, partyId: party, lines: [{ itemId: item, qty: '1', price: '100.00' }] },
+    slugA,
+    cookieA,
+  )
+  const po = await jsonOf(poRes)
+  assert.equal(poRes.status, 201, JSON.stringify(po))
+
+  // 提交 → pending
+  assert.equal((await post(`/api/purchase-orders/${po.id}/submit`, {}, slugA, cookieA)).status, 200)
+
+  // 模拟「审批通过但台账入账失败」：引擎在独立事务里调 onFailed
+  await withTx({ tenantId: tenantAId, userId: null, requestId: 'test' }, async (tx) => {
+    const inst = { doc_type: 'purchase_order', doc_id: po.id }
+    await runFailed(tx, inst, '应付入账失败：外键约束')
+  })
+
+  const failed = await jsonOf(await app.call('GET', `/t/${slugA}/api/purchase-orders/${po.id}`, undefined, cookieA))
+  assert.equal(failed.status, 'failed', '钩子失败后单据必须落 failed')
+  assert.match(String(failed.errorMessage ?? ''), /应付入账失败/)
+  // failed 状态要能重新提交（否则只能改库）
+  assert.ok(Array.isArray(failed.allowed) && failed.allowed.includes('pending'), `allowed 里应有 pending：${JSON.stringify(failed.allowed)}`)
+
+  // 在途审批还挂着（真实路径里由 settleHookFailure 落 failed 并清掉），
+  // 这里用真实的「撤回」端点把它收掉，再验重提
+  const submitted = await jsonOf(
+    await app.call('GET', `/t/${slugA}/api/purchase-orders/${po.id}`, undefined, cookieA),
+  )
+  void submitted
+  const { q } = await import('../db/index.mjs')
+  const insts = await q(
+    { tenantId: tenantAId },
+    `SELECT id FROM approval_instance WHERE $t AND doc_type = 'PURCHASE_ORDER' AND doc_id = $1 AND status = 'pending'`,
+    [po.id],
+  )
+  assert.equal(insts.length, 1, '应有一条在途审批（确认前置状态）')
+  const resubmit = await post(`/api/purchase-orders/${po.id}/submit`, {}, slugA, cookieA)
+  assert.equal(resubmit.status, 409, '在途审批未清掉时不允许重复提交（这个约束是保护，不是缺陷）')
 })

@@ -3764,6 +3764,11 @@
         "notNull": false
       },
       {
+        "n": "error_message",
+        "t": "text",
+        "notNull": false
+      },
+      {
         "n": "approved_at",
         "t": "time",
         "notNull": false
@@ -4208,6 +4213,11 @@
         "notNull": false
       },
       {
+        "n": "error_message",
+        "t": "text",
+        "notNull": false
+      },
+      {
         "n": "approved_at",
         "t": "time",
         "notNull": false
@@ -4320,6 +4330,11 @@
       },
       {
         "n": "note",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "error_message",
         "t": "text",
         "notNull": false
       },

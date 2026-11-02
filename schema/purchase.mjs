@@ -22,6 +22,8 @@ export const tables = [
       { n: 'amount', t: 'money', notNull: true, default: '0.00' },
       { n: 'status', t: 'code', notNull: true, default: "'draft'" },
       { n: 'note', t: 'text' },
+      // 审批通过但台账入账失败时写在这里（B3：半落账要留可查的痕迹）
+      { n: 'error_message', t: 'text' },
       { n: 'approved_at', t: 'time' },
       { n: 'version', t: 'int', notNull: true, default: '1' },
       { n: 'created_by', t: 'uuid' },
@@ -105,6 +107,8 @@ export const tables = [
       { n: 'amount', t: 'money', notNull: true, default: '0.00' },
       { n: 'status', t: 'code', notNull: true, default: "'draft'" },
       { n: 'note', t: 'text' },
+      // 审批通过但台账入账失败时写在这里（B3：半落账要留可查的痕迹）
+      { n: 'error_message', t: 'text' },
       { n: 'approved_at', t: 'time' },
       { n: 'version', t: 'int', notNull: true, default: '1' },
       { n: 'created_at', t: 'time', notNull: true },
@@ -127,6 +131,8 @@ export const tables = [
       { n: 'amount', t: 'money', notNull: true },
       { n: 'status', t: 'code', notNull: true, default: "'draft'" },
       { n: 'note', t: 'text' },
+      // 审批通过但台账入账失败时写在这里（B3：半落账要留可查的痕迹）
+      { n: 'error_message', t: 'text' },
       { n: 'approved_at', t: 'time' },
       { n: 'version', t: 'int', notNull: true, default: '1' },
       { n: 'created_at', t: 'time', notNull: true },

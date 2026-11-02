@@ -27,8 +27,10 @@ import { allowedNext, assertTransition } from './transition.mjs'
 // ── 状态机 ──────────────────────────────────────────────────────────────────
 export const PO_TRANSITIONS = /** @type {const} */ ({
   draft: ['pending'],
-  pending: ['approved', 'rejected'],
+  pending: ['approved', 'rejected', 'failed'],
   rejected: ['pending'],
+  // 钩子失败（台账入账抛错）→ failed；修好后可重新提交审批
+  failed: ['pending'],
   approved: ['closed'],
   closed: [],
 })
@@ -36,8 +38,9 @@ export const PO_STATUSES = Object.keys(PO_TRANSITIONS)
 
 export const SUB_TRANSITIONS = /** @type {const} */ ({
   draft: ['pending'],
-  pending: ['approved', 'rejected'],
+  pending: ['approved', 'rejected', 'failed'],
   rejected: ['pending'],
+  failed: ['pending'],
   approved: ['closed'],
   closed: [],
 })
@@ -45,8 +48,9 @@ export const SUB_STATUSES = Object.keys(SUB_TRANSITIONS)
 
 export const PROGRESS_TRANSITIONS = /** @type {const} */ ({
   draft: ['pending'],
-  pending: ['approved', 'rejected'],
+  pending: ['approved', 'rejected', 'failed'],
   rejected: ['pending'],
+  failed: ['pending'],
   approved: [],
 })
 export const PROGRESS_STATUSES = Object.keys(PROGRESS_TRANSITIONS)
@@ -125,6 +129,8 @@ export const poToApi = (r) => ({
   amount: num(r.amount),
   status: r.status,
   note: r.note,
+  // 审批通过但台账入账失败时的原因（B3）
+  errorMessage: r.error_message,
   approvedAt: r.approved_at,
   version: r.version,
   createdAt: r.created_at,
@@ -176,6 +182,8 @@ export const subToApi = (r) => ({
   amount: num(r.amount),
   status: r.status,
   note: r.note,
+  // 审批通过但台账入账失败时的原因（B3）
+  errorMessage: r.error_message,
   approvedAt: r.approved_at,
   version: r.version,
   createdAt: r.created_at,
@@ -191,6 +199,8 @@ export const progressToApi = (r) => ({
   amount: num(r.amount),
   status: r.status,
   note: r.note,
+  // 审批通过但台账入账失败时的原因（B3）
+  errorMessage: r.error_message,
   approvedAt: r.approved_at,
   version: r.version,
   createdAt: r.created_at,
@@ -286,7 +296,7 @@ export const costToApi = (r) => ({
 hooks.register(DOC_PO, {
   onApproved: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId) => {
     const now = new Date()
-    const n = await store.poSetStatus(tx, { id: docId, from: 'pending', to: 'approved', approvedAt: now, now })
+    const n = await store.poSetStatus(tx, { id: docId, from: 'pending', to: 'approved', approvedAt: now, errorMessage: null, now })
     if (!n) return // 重复回调或状态已变：不二次入账
     const row = await store.poById(tx, docId)
     if (!row) return
@@ -307,6 +317,16 @@ hooks.register(DOC_PO, {
   },
   onRejected: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId) => {
     await store.poSetStatus(tx, { id: docId, from: 'pending', to: 'rejected', now: new Date() })
+  },
+  // 审批过了但台账入账失败：事务已整体回滚，这里单独记失败与原因（B3）
+  onFailed: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId, /** @type {any} */ _inst, /** @type {string} */ reason) => {
+    await store.poSetStatus(tx, {
+      id: docId,
+      from: 'pending',
+      to: 'failed',
+      errorMessage: reason,
+      now: new Date(),
+    })
   },
 })
 
@@ -334,6 +354,9 @@ hooks.register(DOC_SUB, {
   },
   onRejected: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId) => {
     await store.subSetStatus(tx, { id: docId, from: 'pending', to: 'rejected', now: new Date() })
+  },
+  onFailed: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId, /** @type {any} */ _inst, /** @type {string} */ reason) => {
+    await store.subSetStatus(tx, { id: docId, from: 'pending', to: 'failed', errorMessage: reason, now: new Date() })
   },
 })
 
@@ -366,6 +389,15 @@ hooks.register(DOC_PROGRESS, {
   },
   onRejected: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId) => {
     await store.progressSetStatus(tx, { id: docId, from: 'pending', to: 'rejected', now: new Date() })
+  },
+  onFailed: async (/** @type {any} */ tx, /** @type {string} */ _docType, /** @type {string} */ docId, /** @type {any} */ _inst, /** @type {string} */ reason) => {
+    await store.progressSetStatus(tx, {
+      id: docId,
+      from: 'pending',
+      to: 'failed',
+      errorMessage: reason,
+      now: new Date(),
+    })
   },
 })
 

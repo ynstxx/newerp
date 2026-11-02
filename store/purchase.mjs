@@ -8,7 +8,7 @@ import { cursorClause } from '../http/page.mjs'
 
 // ── purchase_order ──────────────────────────────────────────────────────────
 const PO_COLS =
-  'id, project_id, party_id, code, amount, status, note, approved_at, version, created_by, created_at, updated_at'
+  'id, project_id, party_id, code, amount, status, note, error_message, approved_at, version, created_by, created_at, updated_at'
 
 /** @param {any} ctx @param {string} id */
 export const poById = (ctx, id) => one(ctx, `SELECT ${PO_COLS} FROM purchase_order WHERE $t AND id = $1`, [id])
@@ -87,15 +87,16 @@ export const poUpdateNote = (ctx, p) =>
 /**
  * 状态推进（带 `AND status = $from`，重复推进自然 0 行）。
  * @param {any} ctx
- * @param {{ id: string, from: string, to: string, now: Date, approvedAt?: Date | null }} p
+ * @param {{ id: string, from: string, to: string, now: Date, approvedAt?: Date | null, errorMessage?: string | null }} p
  */
 export const poSetStatus = (ctx, p) =>
   exec(
     ctx,
     `UPDATE purchase_order
-        SET status = $1, approved_at = $2, version = version + 1, updated_at = $3
+        SET status = $1, approved_at = $2, version = version + 1, updated_at = $3,
+            error_message = $6
       WHERE $t AND id = $4 AND status = $5`,
-    [p.to, p.approvedAt ?? null, p.now, p.id, p.from],
+    [p.to, p.approvedAt ?? null, p.now, p.id, p.from, p.errorMessage ?? null],
   )
 
 // ── po_line ─────────────────────────────────────────────────────────────────
@@ -214,7 +215,7 @@ export const grnLinesOf = (ctx, receiptId) =>
 
 // ── subcontract ─────────────────────────────────────────────────────────────
 const SUB_COLS =
-  'id, project_id, party_id, code, name, amount, status, note, approved_at, version, created_at, updated_at'
+  'id, project_id, party_id, code, name, amount, status, note, error_message, approved_at, version, created_at, updated_at'
 
 /** @param {any} ctx @param {string} id */
 export const subById = (ctx, id) => one(ctx, `SELECT ${SUB_COLS} FROM subcontract WHERE $t AND id = $1`, [id])
@@ -267,19 +268,21 @@ export const subInsert = (ctx, p) =>
 
 /**
  * @param {any} ctx
- * @param {{ id: string, from: string, to: string, now: Date, approvedAt?: Date | null }} p
+ * @param {{ id: string, from: string, to: string, now: Date, approvedAt?: Date | null, errorMessage?: string | null }} p
  */
 export const subSetStatus = (ctx, p) =>
   exec(
     ctx,
     `UPDATE subcontract
-        SET status = $1, approved_at = $2, version = version + 1, updated_at = $3
+        SET status = $1, approved_at = $2, version = version + 1, updated_at = $3,
+            error_message = $6
       WHERE $t AND id = $4 AND status = $5`,
-    [p.to, p.approvedAt ?? null, p.now, p.id, p.from],
+    [p.to, p.approvedAt ?? null, p.now, p.id, p.from, p.errorMessage ?? null],
   )
 
 // ── subcontract_progress ────────────────────────────────────────────────────
-const PROG_COLS = 'id, subcontract_id, seq, amount, status, note, approved_at, version, created_at, updated_at'
+const PROG_COLS =
+  'id, subcontract_id, seq, amount, status, note, error_message, approved_at, version, created_at, updated_at'
 
 /** @param {any} ctx @param {string} id */
 export const progressById = (ctx, id) => one(ctx, `SELECT ${PROG_COLS} FROM subcontract_progress WHERE $t AND id = $1`, [id])
@@ -320,15 +323,16 @@ export const progressInsert = (ctx, p) =>
 
 /**
  * @param {any} ctx
- * @param {{ id: string, from: string, to: string, now: Date, approvedAt?: Date | null }} p
+ * @param {{ id: string, from: string, to: string, now: Date, approvedAt?: Date | null, errorMessage?: string | null }} p
  */
 export const progressSetStatus = (ctx, p) =>
   exec(
     ctx,
     `UPDATE subcontract_progress
-        SET status = $1, approved_at = $2, version = version + 1, updated_at = $3
+        SET status = $1, approved_at = $2, version = version + 1, updated_at = $3,
+            error_message = $6
       WHERE $t AND id = $4 AND status = $5`,
-    [p.to, p.approvedAt ?? null, p.now, p.id, p.from],
+    [p.to, p.approvedAt ?? null, p.now, p.id, p.from, p.errorMessage ?? null],
   )
 
 // ── invoice ─────────────────────────────────────────────────────────────────
