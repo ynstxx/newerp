@@ -320,10 +320,10 @@ function onCommand(cmd) {
 .nav {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0 12px;
+  padding: 16px 0 20px;
 }
 .grp + .grp {
-  margin-top: 6px;
+  margin-top: 18px;
 }
 .grp-head {
   width: 100%;
@@ -331,11 +331,11 @@ function onCommand(cmd) {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 8px 18px 10px;
   background: none;
   border: 0;
   color: var(--erp-text-3);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
@@ -359,18 +359,18 @@ function onCommand(cmd) {
 
 .item {
   position: relative;
-  width: calc(100% - 16px);
-  margin: 2px 8px;
+  width: calc(100% - 24px);
+  margin: 5px 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 34px;
-  padding: 0 10px;
+  gap: 10px;
+  height: 44px;
+  padding: 0 12px;
   border: 0;
   border-radius: var(--erp-radius-sm);
   background: transparent;
   color: var(--erp-text-2);
-  font-size: 13px;
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
 }
@@ -380,9 +380,9 @@ function onCommand(cmd) {
 }
 .item .bar {
   position: absolute;
-  left: -8px;
-  top: 7px;
-  bottom: 7px;
+  left: -12px;
+  top: 11px;
+  bottom: 11px;
   width: 3px;
   border-radius: 0 3px 3px 0;
   background: transparent;
@@ -406,28 +406,28 @@ function onCommand(cmd) {
   color: var(--erp-text-3);
 }
 .ico {
-  font-size: 16px;
-  flex: 0 0 16px;
+  font-size: 18px;
+  flex: 0 0 18px;
 }
 .label {
   flex: 1;
   min-width: 0;
 }
 .soon {
-  font-size: 10px;
+  font-size: 11px;
   padding: 1px 5px;
   border-radius: 6px;
   color: var(--erp-text-3);
   border: 1px solid var(--erp-border);
 }
 .rail .item {
-  width: 40px;
-  margin: 4px 8px;
+  width: 44px;
+  margin: 6px auto;
   padding: 0;
   justify-content: center;
 }
 .rail .item .bar {
-  left: -8px;
+  left: -12px;
 }
 .side-foot {
   display: flex;
