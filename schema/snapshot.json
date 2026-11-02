@@ -1,4 +1,263 @@
 {
+  "ai_settings": {
+    "name": "ai_settings",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "base_url",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "api_key",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "model",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "enabled",
+        "t": "bool",
+        "notNull": true,
+        "default": "false"
+      },
+      {
+        "n": "max_tokens",
+        "t": "int",
+        "notNull": true,
+        "default": "1024"
+      },
+      {
+        "n": "timeout_ms",
+        "t": "int",
+        "notNull": true,
+        "default": "15000"
+      },
+      {
+        "n": "monthly_token_limit",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "used_tokens",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true,
+        "default": "1"
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "enabled"
+      ]
+    ],
+    "fk": []
+  },
+  "ai_draft": {
+    "name": "ai_draft",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "tool_name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "payload",
+        "t": "json",
+        "notNull": true
+      },
+      {
+        "n": "preview",
+        "t": "json",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "submitter_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "applied_ref_type",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "applied_ref_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "error",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true,
+        "default": "1"
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "status"
+      ],
+      [
+        "tenant_id",
+        "tool_name"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": []
+  },
+  "ai_trace": {
+    "name": "ai_trace",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "draft_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "model",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "prompt_tokens",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "completion_tokens",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "cost_micros",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "duration_ms",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "tool_calls",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ],
+      [
+        "tenant_id",
+        "draft_id"
+      ]
+    ],
+    "fk": []
+  },
   "org_dept": {
     "name": "org_dept",
     "tenant": true,
