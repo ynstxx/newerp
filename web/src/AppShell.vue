@@ -323,33 +323,57 @@ function onCommand(cmd) {
   padding: 16px 0 20px;
 }
 .grp + .grp {
-  margin-top: 18px;
+  margin-top: 14px;
 }
+/* 分组头是"可点的一行"，不是一段小字：给它和菜单项一样的命中区与 hover 反馈 */
 .grp-head {
-  width: 100%;
+  width: calc(100% - 24px);
+  margin: 0 12px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  padding: 8px 18px 10px;
+  gap: 8px;
+  padding: 0 12px;
   background: none;
   border: 0;
+  border-radius: var(--erp-radius-sm);
   color: var(--erp-text-3);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .grp-head:hover {
   color: var(--erp-text-2);
+  background: var(--erp-primary-hover);
+}
+.grp-head:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: -2px;
+}
+.grp-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .chev {
-  font-size: 11px;
+  flex: 0 0 auto;
+  font-size: 14px;
+  transition: transform 0.18s ease;
   transform: rotate(-90deg);
-  transition: transform 0.16s ease;
 }
 .chev.open {
   transform: rotate(0deg);
+}
+/* 展开的分组，标题与下面菜单项之间留一口气 */
+.grp-head + .items {
+  margin-top: 4px;
 }
 .items {
   list-style: none;
