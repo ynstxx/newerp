@@ -18,6 +18,7 @@ export async function createAdapter() {
     password: config.db.password,
     database: config.db.database,
     max: 10,
+    connectionTimeoutMillis: 3000, // 健康检查不能被一个挂掉的库拖死
   })
 
   /** @type {(c: any) => any} */

@@ -1,6 +1,6 @@
 import http from 'node:http'
 import { pathToFileURL } from 'node:url'
-import { config } from '../config.mjs'
+import { assertProductionConfig, config } from '../config.mjs'
 import { createRouter } from '../http/router.mjs'
 import { compose, recover, requestId, log } from '../http/middleware.mjs'
 import { createContext } from '../http/context.mjs'
@@ -56,6 +56,7 @@ export function createApp() {
 
 // 仅直接运行时监听；被测试 import 时不自启
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  assertProductionConfig()
   const server = createApp()
   server.on('error', (err) => {
     console.error(`listen ${config.host}:${config.port} failed:`, err.message)

@@ -12,7 +12,11 @@
 
 ## 状态
 
-M0 · S5 完成 —— 骨架 + 双库迁移（11 表）+ 认证/租户/权限 + 四模式注册 + 客户主数据 CRUD
+## 状态
+
+**M0 完成** —— 骨架 + 双库迁移（11 表）+ 认证/租户/权限 + 四模式注册 + 客户主数据 CRUD + 双库等价门禁
+
+前端（S6）未开始：`web/` 目录还不存在。
 
 ## 首次进入
 
@@ -61,3 +65,23 @@ DB_DRIVER=mysql DB_PORT=3308 node cmd/migrate.mjs check
 ## 分层铁律
 
 `api/` 无 SQL · `store/` 无业务判断 · `svc/` 唯一开事务处 · 租户表 SQL 必带 `$t`
+
+## 门禁（CI 四项）
+
+| 作业 | 做什么 |
+|---|---|
+| `test-pg` | 空库建表 → `migrate check` → 再 `up` 验幂等 → 全量测试 → 健康检查 |
+| `test-mysql` | 同上，换 MySQL 8.0 |
+| `dual` | 两个库同时在场，`information_schema` 归一化后**逐字节比对** |
+| `npm run typecheck` | `tsc --noEmit`（仅检查，不产出 JS） |
+
+业务代码里跑不到的那道门是 `test/tenant_guard.test.mjs`：扫 `store/**/*.mjs` 的 SQL 字面量，碰租户表却漏 `$t` 直接红。
+
+## 健康与上线
+
+```bash
+curl -s localhost:8080/healthz
+# {"ok":true,"db":"up","version":"0.0.1","env":"development","uptime":3,"requestId":"…"}
+```
+
+`NODE_ENV=production` 时必须给 `APP_SECRET`（`openssl rand -hex 32`），否则**拒绝启动** —— 抱默认密钥跑等于会话和人机校验都白做。

@@ -25,6 +25,7 @@ export async function createAdapter() {
     password: config.db.password,
     database: config.db.database,
     connectionLimit: 10,
+    connectTimeout: 3000,
     supportBigNumbers: true,
     bigNumberStrings: true,
     typeCast,

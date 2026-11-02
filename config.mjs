@@ -29,3 +29,14 @@ export const config = {
     database: process.env.DB_NAME ?? 'newerp',
   },
 }
+
+/**
+ * 上线门禁：生产环境捧着默认密钥跑 = 会话和人机校验形同虚设。
+ * 启动时直接抦下来，比上线后才发现便宜得多。
+ */
+export function assertProductionConfig() {
+  if (process.env.NODE_ENV !== 'production') return
+  if (!process.env.APP_SECRET) {
+    throw new Error('生产环境必须设置 APP_SECRET（会话签名与人机校验的 HMAC 密钥，如 openssl rand -hex 32）')
+  }
+}

@@ -1,0 +1,137 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # 两个库的账号保持一致，矩阵作业里只换 DB_DRIVER / DB_PORT
+  DB_USER: newerp
+  DB_PASSWORD: newerp
+  DB_NAME: newerp
+  DB_HOST: 127.0.0.1
+
+jobs:
+  # ── 双库等权：两个方言各跑一遍全量（DESIGN §14 矩阵两项都必跑） ──────────
+  test-pg:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: newerp
+          POSTGRES_PASSWORD: newerp
+          POSTGRES_DB: newerp
+          TZ: UTC
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U newerp -d newerp"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DB_DRIVER: pg
+      DB_PORT: '5432'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 类型检查
+        run: npm run typecheck
+      - name: 空库建表
+        run: node cmd/migrate.mjs up
+      - name: 结构漂移检查
+        run: node cmd/migrate.mjs check
+      - name: 迁移幂等
+        run: node cmd/migrate.mjs up
+      - run: npm test
+      - name: 健康检查
+        run: |
+          node cmd/server.mjs &
+          for i in $(seq 1 20); do sleep 0.5; curl -sf localhost:8080/healthz && exit 0; done
+          echo "healthz 未就绪"; exit 1
+
+  test-mysql:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: newerp
+          MYSQL_USER: newerp
+          MYSQL_PASSWORD: newerp
+          TZ: UTC
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -unewerp -pnewerp"
+          --health-interval 3s --health-timeout 3s --health-retries 30
+    env:
+      DB_DRIVER: mysql
+      DB_PORT: '3306'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 空库建表
+        run: node cmd/migrate.mjs up
+      - name: 结构漂移检查
+        run: node cmd/migrate.mjs check
+      - name: 迁移幂等
+        run: node cmd/migrate.mjs up
+      - run: npm test
+
+  # ── 结构等价门禁：两个库同时在场，归一化后必须逐字节一致 ────────────────
+  dual:
+    runs-on: ubuntu-latest
+    services:
+      pg:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: newerp
+          POSTGRES_PASSWORD: newerp
+          POSTGRES_DB: newerp
+          TZ: UTC
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U newerp -d newerp"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: newerp
+          MYSQL_USER: newerp
+          MYSQL_PASSWORD: newerp
+          TZ: UTC
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -unewerp -pnewerp"
+          --health-interval 3s --health-timeout 3s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 两个空库各建一遍
+        run: |
+          DB_DRIVER=pg    DB_PORT=5432 node cmd/migrate.mjs up
+          DB_DRIVER=mysql DB_PORT=3306 node cmd/migrate.mjs up
+      - name: 两份 SQL 一字不差地重放到空库（幂等）
+        run: |
+          DB_DRIVER=pg    DB_PORT=5432 node cmd/migrate.mjs up
+          DB_DRIVER=mysql DB_PORT=3306 node cmd/migrate.mjs up
+      - name: 双库结构等价
+        env:
+          DUAL_PG_PORT: '5432'
+          DUAL_MYSQL_PORT: '3306'
+          DB_DRIVER: pg
+          DB_PORT: '5432'
+        run: node --test test/dual_db.test.mjs
