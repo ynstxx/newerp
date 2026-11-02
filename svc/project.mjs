@@ -7,17 +7,29 @@ import * as membership from '../store/membership.mjs'
 import * as store from '../store/project.mjs'
 import { allowedNext, assertTransition } from './transition.mjs'
 
-/** 项目状态机（M1-DESIGN §2）：quoting→signed 由合同切片联动，这里也允许直接推进 */
+/**
+ * 项目状态机（M1-DESIGN §2 + M3 施工域延长）：
+ *   signed → constructing → pending_acceptance → warranty → closed，terminated 保持旁路。
+ * quoting→signed 只能由合同签署联动；pending_acceptance 由整体验收通过联动（svc/acceptance.mjs）。
+ * allowedNext 经 toApi 返回，前端按钮与 API 自动跟着这张表走 —— 这里才是唯一真源。
+ */
 export const PROJECT_TRANSITIONS = /** @type {const} */ ({
   draft: ['approved', 'terminated'],
   approved: ['designing', 'terminated'],
   designing: ['quoting', 'approved', 'terminated'],
   quoting: ['signed', 'designing', 'terminated'],
-  signed: [],
+  signed: ['constructing', 'terminated'],
+  constructing: ['pending_acceptance', 'terminated'],
+  pending_acceptance: ['warranty', 'constructing', 'terminated'],
+  warranty: ['closed', 'terminated'],
+  closed: [],
   terminated: [],
 })
 
 export const PROJECT_STATUSES = Object.keys(PROJECT_TRANSITIONS)
+
+/** 已签约之后字段冻结（M1 只冻结 signed/terminated，M3 把施工后的状态一并冻结） */
+const FROZEN_STATUSES = ['signed', 'constructing', 'pending_acceptance', 'warranty', 'closed', 'terminated']
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -104,7 +116,8 @@ export async function listStages(ctx, id) {
 export async function updateProject(ctx, id, patch) {
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
-  if (cur.status === 'signed' || cur.status === 'terminated') {
+  // 签约后项目条款已对外承诺，只允许走状态机（终止/推进），不允许改字段
+  if (FROZEN_STATUSES.includes(cur.status)) {
     throw new HttpError(errors.conflict, { reason: `${cur.status} 的项目不可再改`, allowed: [] })
   }
   if (patch.version !== undefined && patch.version !== cur.version) {
