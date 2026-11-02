@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { once } from 'node:events'
 import { createRouter } from '../http/router.mjs'
 import { createApp } from '../cmd/server.mjs'
+import { close } from '../db/index.mjs'
 
 /**
  * @param {any} hit
@@ -28,7 +29,11 @@ test('路由：静态、参数、404、405', () => {  const r = createRouter()
 test('骨架：/healthz 200，未知路径 404，方法不符 405', async (t) => {
   const server = createApp().listen(0, '127.0.0.1')
   await once(server, 'listening')
-  t.after(() => server.close())
+  // /healthz 会真的连库，连出来的连接池必须在跑完关掉，否则进程不退出
+  t.after(async () => {
+    server.close()
+    await close()
+  })
   const addr = /** @type {import('node:net').AddressInfo} */ (server.address())
   const base = `http://127.0.0.1:${addr.port}`
 
