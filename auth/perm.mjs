@@ -34,29 +34,9 @@ export const PERM = {
 /** @type {Record<string, string[]>} */
 export const ROLE_PERMS = {
   owner: ['*'],
-  member: [
-    PERM.partyView,
-    PERM.partyCreate,
-    PERM.partyUpdate,
-    PERM.opportunityView,
-    PERM.opportunityCreate,
-    PERM.opportunityUpdate,
-    PERM.projectView,
-    PERM.projectCreate,
-    PERM.projectUpdate,
-    PERM.requirementView,
-    PERM.requirementCreate,
-    PERM.requirementUpdate,
-    PERM.designView,
-    PERM.designCreate,
-    PERM.designUpdate,
-    PERM.quotationView,
-    PERM.quotationCreate,
-    PERM.quotationUpdate,
-    PERM.contractView,
-    PERM.contractCreate,
-    PERM.contractUpdate,
-  ],
+  // 普通成员：所有模块的查看/新建/修改，但**不含**配置类与危险动作
+  // （*:terminate / *:delete / *:config / *:manage / *:dispatch / *:approve 都不在其中）
+  member: ['*:view', '*:create', '*:update'],
 }
 
 /** @type {Record<string, string>} */
@@ -72,9 +52,20 @@ export function permsOf(code) {
  * @param {any} ctx
  * @param {string} perm
  */
+/**
+ * 权限串匹配：精确 / `*`（全部）/ `<模块>:*`（该模块任意动作）/ `*:<动作>`（任意模块的该动作）。
+ * 两个方向都支持，member 才能用 `*:view` 这种写法，而不是每加一个域就在角色表里补一行。
+ */
+export function hasPerm(/** @type {Set<string>} */ perms, /** @type {string} */ perm) {
+  if (perms.has('*') || perms.has(perm)) return true
+  const [mod, action] = perm.split(':')
+  return perms.has(`${mod}:*`) || perms.has(`*:${action}`)
+}
+
+/** @param {any} ctx @param {string} perm */
 export function need(ctx, perm) {
   if (!ctx.userId) throw new HttpError(errors.unauthorized)
-  if (!ctx.perms.has(perm) && !ctx.perms.has('*')) throw new HttpError(errors.forbidden, { need: perm })
+  if (!hasPerm(ctx.perms, perm)) throw new HttpError(errors.forbidden, { need: perm })
 }
 
 /** @param {any} ctx */
