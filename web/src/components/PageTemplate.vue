@@ -15,10 +15,9 @@
  * 约定：页面自己不写外层卡片、不写工具栏布局、不写底部对齐 —— 都在这一个文件里。
  * 槽全部可选：没有 #hint / #pager 时底部不渲染，表单页就不会多出一条空横线。
  */
-defineProps({
-  /** 是否给中间区加内边距（表格想通栏贴边就传 false） */
-  padded: { type: Boolean, default: false },
-})
+// 不用传参：三块区域的留白都在下面 CSS 里定义，
+// 中间区是否补底部内边距由 :last-child 自动判断（有底栏时不补）。
+
 </script>
 
 <template>
@@ -32,7 +31,7 @@ defineProps({
       </div>
     </header>
 
-    <div class="page-body" :class="{ padded }">
+    <div class="page-body">
       <slot />
     </div>
 
@@ -49,9 +48,14 @@ defineProps({
 
 <style scoped>
 .page {
+  --page-pad: var(--erp-pad-card); /* 左右 24px */
+  --page-pad-y: 20px; /* 上下 20px：略小于左右，视觉上才不像"上下留太多" */
+
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* .erp-card 自己带 padding，这里清零；留白统一由下面三块自己管 */
+  padding: 0;
 }
 
 /* 左上搜索 / 右上按钮 */
@@ -61,7 +65,7 @@ defineProps({
   justify-content: space-between;
   gap: 12px 16px;
   flex-wrap: wrap;
-  padding: var(--erp-pad-card) var(--erp-pad-card) 0;
+  padding: var(--page-pad-y) var(--page-pad) 0;
 }
 .page-search,
 .page-actions {
@@ -77,11 +81,12 @@ defineProps({
 
 /* 中间：列表框 / 表单 */
 .page-body {
-  padding: var(--erp-pad-card) 0 0;
+  padding: var(--page-pad-y) var(--page-pad) 0;
   min-height: 0;
 }
-.page-body.padded {
-  padding: var(--erp-pad-card);
+/* 没有底栏时（表单页），自己补上底部留白 */
+.page-body:last-child {
+  padding-bottom: var(--page-pad-y);
 }
 
 /* 左下提示 / 右下分页 */
@@ -91,10 +96,10 @@ defineProps({
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin: 0 var(--erp-pad-card);
-  padding: 14px 0 var(--erp-pad-card);
+  margin: 0 var(--page-pad);
+  padding: 12px 0 var(--page-pad-y);
   border-top: 1px solid var(--erp-border);
-  margin-top: var(--erp-gap);
+  margin-top: var(--page-pad-y);
 }
 .page-hint {
   min-width: 0;
