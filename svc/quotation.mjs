@@ -6,7 +6,7 @@ import { normCode } from '../http/validate.mjs'
 import { centsOf, lineAmountCents, moneyOf } from '../http/money.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/quotation.mjs'
-import { assertTransition } from './transition.mjs'
+import { allowedNext, assertTransition } from './transition.mjs'
 
 /** 报价状态机：M1 无审批，draft → sent → accepted|rejected */
 export const TRANSITIONS = /** @type {const} */ ({
@@ -42,6 +42,8 @@ export const toApi = (r) => ({
   note: r.note,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  // 当前状态能去哪 —— 前端据此渲染合法的推进按钮，不再自己抄一份状态机
+  allowed: allowedNext(TRANSITIONS, r.status),
 })
 
 /** @param {any} r */

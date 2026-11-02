@@ -5,7 +5,7 @@ import { trimPage } from '../http/page.mjs'
 import * as audit from '../store/audit.mjs'
 import * as membership from '../store/membership.mjs'
 import * as store from '../store/project.mjs'
-import { assertTransition } from './transition.mjs'
+import { allowedNext, assertTransition } from './transition.mjs'
 
 /** 项目状态机（M1-DESIGN §2）：quoting→signed 由合同切片联动，这里也允许直接推进 */
 export const PROJECT_TRANSITIONS = /** @type {const} */ ({
@@ -43,6 +43,8 @@ export const toApi = (r) => ({
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  // 当前状态能去哪 —— 前端据此渲染合法的推进按钮，不再自己抄一份状态机
+  allowed: allowedNext(PROJECT_TRANSITIONS, r.status),
 })
 
 /** @param {any} r */

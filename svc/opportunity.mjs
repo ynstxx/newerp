@@ -7,7 +7,7 @@ import * as audit from '../store/audit.mjs'
 import * as membership from '../store/membership.mjs'
 import * as store from '../store/opportunity.mjs'
 import { createProjectForOpportunity } from './project.mjs'
-import { assertTransition } from './transition.mjs'
+import { allowedNext, assertTransition } from './transition.mjs'
 
 /** 商机状态机（M1-DESIGN §2）：won 之后不再流转 */
 export const OPPORTUNITY_TRANSITIONS = /** @type {const} */ ({
@@ -48,6 +48,8 @@ export const toApi = (r) => ({
   version: r.version,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  // 当前状态能去哪 —— 前端据此渲染合法的推进按钮，不再自己抄一份状态机
+  allowed: allowedNext(OPPORTUNITY_TRANSITIONS, r.stage),
 })
 
 /**
