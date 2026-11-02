@@ -411,6 +411,8 @@ export async function listLaborHours(ctx) {
       projectId: qp(ctx, 'projectId'),
       userId: qp(ctx, 'userId'),
       taskId: qp(ctx, 'taskId'),
+      from: qp(ctx, 'from'),
+      to: qp(ctx, 'to'),
     }),
   )
 }

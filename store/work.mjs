@@ -485,7 +485,7 @@ export const laborById = (ctx, id) => one(ctx, `SELECT ${LABOR_COLS} FROM labor_
 
 /**
  * @param {any} ctx
- * @param {{ limit: number, order: 'asc'|'desc', cursor: { at: Date, id: string } | null, projectId?: string, userId?: string, taskId?: string }} f
+ * @param {{ limit: number, order: 'asc'|'desc', cursor: { at: Date, id: string } | null, projectId?: string, userId?: string, taskId?: string, from?: string, to?: string }} f
  */
 export function laborList(ctx, f) {
   /** @type {string[]} */
@@ -502,6 +502,15 @@ export function laborList(ctx, f) {
       args.push(v)
       conds.push(`${col} = $${args.length}`)
     }
+  }
+  // 工时按工作日期过滤（前端一直传 from/to，之前服务端没认，只能本地过滤已加载页）
+  if (f.from) {
+    args.push(f.from)
+    conds.push(`work_date >= $${args.length}`)
+  }
+  if (f.to) {
+    args.push(f.to)
+    conds.push(`work_date <= $${args.length}`)
   }
   return pageQuery(ctx, 'labor_hour', LABOR_COLS, f, conds, args)
 }
