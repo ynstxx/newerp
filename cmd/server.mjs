@@ -12,6 +12,7 @@ import { login, logout, me } from '../api/auth.mjs'
 import { createInvite, register, registerInfo } from '../api/registration.mjs'
 import * as party from '../api/party.mjs'
 import * as session from '../auth/session.mjs'
+import * as notifyWorker from '../svc/notify_worker.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
 /**
@@ -97,11 +98,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1)
   })
   server.listen(config.port, config.host, () => {
+    // 通知 outbox worker：单进程内轮询，DB 当日志队列
+    notifyWorker.start()
     console.log(`newerp ${config.version} listening on http://${config.host}:${config.port}`)
   })
   for (const sig of /** @type {const} */ (['SIGTERM', 'SIGINT'])) {
     process.on(sig, () => {
       console.log(`${sig} received, draining`)
+      notifyWorker.stop()
       server.close(() => process.exit(0))
       setTimeout(() => process.exit(1), 30_000).unref()
     })

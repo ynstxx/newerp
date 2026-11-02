@@ -4,6 +4,7 @@ import { sendJson } from '../http/context.mjs'
 import { parsePage } from '../http/page.mjs'
 import { validate } from '../http/validate.mjs'
 import * as svc from '../svc/approval.mjs'
+import * as bridge from '../svc/approval_notify.mjs'
 
 // 审批流程定义：view / config（DESIGN §8 权限矩阵）；执行审批只需登录
 const VIEW = 'approval:view'
@@ -80,15 +81,14 @@ export async function submit(ctx) {
     docType: { type: 'code', required: true, max: 64 },
     docId: { type: 'string', required: true, max: 36 },
   })
-  sendJson(
-    ctx.res,
-    201,
-    await svc.submit(ctx, {
-      docType: String(input.docType),
-      docId: String(input.docId),
-      amount: /** @type {any} */ (body.amount),
-    }),
-  )
+  const instance = await svc.submit(ctx, {
+    docType: String(input.docType),
+    docId: String(input.docId),
+    amount: /** @type {any} */ (body.amount),
+  })
+  // 通知是副作用：审批已经落库了，这里失败不能把审批回滚
+  await bridge.emitPending(ctx, instance).catch(() => {})
+  sendJson(ctx.res, 201, instance)
 }
 
 /** @type {import('../http/router.mjs').Handler} */
@@ -105,14 +105,20 @@ export async function decide(ctx) {
     action: { type: 'enum', values: svc.DECIDE_ACTIONS, required: true },
     comment: { type: 'string', max: 500 },
   })
-  sendJson(
-    ctx.res,
-    200,
-    await svc.decide(ctx, ctx.params.id, {
-      action: /** @type {'approve' | 'reject'} */ (input.action),
-      comment: input.comment === undefined ? null : String(input.comment),
-    }),
-  )
+  const result = await svc.decide(ctx, ctx.params.id, {
+    action: /** @type {'approve' | 'reject'} */ (input.action),
+    comment: input.comment === undefined ? null : String(input.comment),
+  })
+  const inst = /** @type {any} */ (result).instance ?? result
+  // 通过且还有下一级 → 通知下一级；结束 → 通知提交人
+  if (input.action === 'reject' || inst?.status === 'rejected') {
+    await bridge.emitFinished(ctx, inst, 'reject').catch(() => {})
+  } else if (inst?.status === 'pending') {
+    await bridge.emitPending(ctx, inst).catch(() => {})
+  } else {
+    await bridge.emitFinished(ctx, inst, 'approve').catch(() => {})
+  }
+  sendJson(ctx.res, 200, result)
 }
 
 /** @type {import('../http/router.mjs').Handler} */

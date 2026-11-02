@@ -1320,6 +1320,297 @@
       }
     ]
   },
+  "notify_channel": {
+    "name": "notify_channel",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "type",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "enabled",
+        "t": "bool",
+        "notNull": true
+      },
+      {
+        "n": "config",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "type"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
+  "notify_template": {
+    "name": "notify_template",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "channel",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "lang",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "subject",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "body",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code",
+        "channel",
+        "lang"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "channel"
+      ]
+    ],
+    "fk": []
+  },
+  "notify_outbox": {
+    "name": "notify_outbox",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "channel",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "to_addr",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "template_code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "vars",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "attempts",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "next_retry_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "error",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "dedupe_key",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "dedupe_key"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "status",
+        "next_retry_at"
+      ],
+      [
+        "tenant_id",
+        "template_code"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": []
+  },
+  "notify_inbox": {
+    "name": "notify_inbox",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "user_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "title",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "body",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "link",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "read_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "user_id",
+        "read_at",
+        "created_at"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": []
+  },
   "org_membership": {
     "name": "org_membership",
     "tenant": true,
