@@ -1,7 +1,12 @@
 {
-  "app": { "name": "信息化集成管理", "lang": "EN" },
+  "app": {
+    "name": "信息化集成管理",
+    "lang": "EN"
+  },
   "login": {
     "title": "登录",
+    "tagline": "项目 · 报价 · 合同，一条链管到底",
+    "hint": "使用公司邮箱登录",
     "email": "邮箱",
     "password": "密码",
     "submit": "登录",
@@ -12,9 +17,72 @@
     "empty": "你还没有加入任何公司",
     "switch": "切换公司"
   },
-  "nav": { "logout": "退出", "hello": "你好" },
+  "nav": {
+    "logout": "退出",
+    "hello": "你好"
+  },
+  "menu": {
+    "groupOverview": "概览",
+    "groupBusiness": "业务",
+    "groupCommerce": "商务",
+    "groupSystem": "系统",
+    "workbench": "工作台",
+    "opportunity": "商机",
+    "project": "项目",
+    "party": "客户",
+    "quotation": "报价",
+    "contract": "合同",
+    "member": "成员",
+    "soon": "未上线",
+    "memberSoon": "成员管理尚未上线"
+  },
+  "top": {
+    "search": "搜索项目、客户、合同",
+    "searchTodo": "全局搜索尚未接入，先用左侧菜单进入模块",
+    "notify": "通知",
+    "notifyEmpty": "暂无通知",
+    "fold": "收起侧栏",
+    "unfold": "展开侧栏",
+    "refresh": "刷新",
+    "refreshed": "已刷新",
+    "logout": "退出登录"
+  },
+  "dash": {
+    "greet": "早安，{name}",
+    "statProjects": "项目总数",
+    "statOpportunities": "商机总数",
+    "statContractAmount": "合同总额",
+    "projects": "项目",
+    "more": "更多",
+    "projectEmpty": "还没有项目，商机赢单后会自动立项",
+    "goOpportunity": "去看商机",
+    "quick": "快捷导航",
+    "recent": "最近动态",
+    "recentEmpty": "还没有状态变更记录",
+    "todos": "待办事项",
+    "todosEmpty": "没有待签约的项目",
+    "todoSign": "待签约",
+    "loading": "加载中",
+    "error": "加载失败",
+    "retry": "重试",
+    "sessionExpired": "登录已过期，请重新登录",
+    "partialTitle": "汇总数据加载失败，项目列表仍可用"
+  },
+  "pstatus": {
+    "draft": "草稿",
+    "approved": "已立项",
+    "designing": "设计中",
+    "quoting": "报价中",
+    "signed": "已签约",
+    "terminated": "已终止"
+  },
+  "soon": {
+    "desc": "{name}的界面还没做，后端接口已就绪：",
+    "back": "回到工作台"
+  },
   "party": {
     "title": "客户与供应商",
+    "hint": "M1 主数据",
     "new": "新建",
     "edit": "编辑",
     "delete": "删除",
@@ -35,7 +103,18 @@
     "deleted": "已删除",
     "confirmDelete": "确定删除这条记录？"
   },
-  "type": { "customer": "客户", "supplier": "供应商", "both": "两者兼有" },
-  "status": { "active": "启用", "disabled": "停用" },
-  "action": { "save": "保存", "cancel": "取消", "saved": "已保存" }
+  "type": {
+    "customer": "客户",
+    "supplier": "供应商",
+    "both": "两者兼有"
+  },
+  "status": {
+    "active": "启用",
+    "disabled": "停用"
+  },
+  "action": {
+    "save": "保存",
+    "cancel": "取消",
+    "saved": "已保存"
+  }
 }

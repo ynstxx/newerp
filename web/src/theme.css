@@ -1,0 +1,191 @@
+/**
+ * 唯一主题文件：深色（不做切换）。
+ * 先定义自己的 token（--erp-*），再把 Element Plus 的变量覆盖到同一套色板上，
+ * 这样 EP 组件与手写布局不会出现两种黑。
+ */
+:root {
+  /* 底色 */
+  --erp-bg: #0f0f17; /* 页面背景 */
+  --erp-surface: #1b1b28; /* 卡片 / 顶栏 */
+  --erp-surface-2: #15151f; /* 侧栏 / 输入框 */
+  --erp-surface-3: #1f1f2e; /* 浮层（下拉、抽屉、消息） */
+  --erp-border: rgba(255, 255, 255, 0.07);
+
+  /* 文字 */
+  --erp-text: #e8e8f0; /* 主 */
+  --erp-text-2: #9a9aae; /* 次 */
+  --erp-text-3: #6b6b80; /* 弱 */
+
+  /* 强调与语义色 */
+  --erp-primary: #4f7cff;
+  --erp-primary-soft: rgba(79, 124, 255, 0.14);
+  --erp-primary-hover: rgba(255, 255, 255, 0.04);
+  --erp-success: #22c55e;
+  --erp-warning: #f59e0b;
+  --erp-danger: #ef4444;
+
+  /* 尺寸：圆角 / 间距 / 结构 */
+  --erp-radius-card: 12px;
+  --erp-radius-sm: 8px;
+  --erp-pad-card: 16px;
+  --erp-gap: 16px;
+  --erp-side-w: 220px;
+  --erp-side-w-collapsed: 56px;
+  --erp-top-h: 48px;
+  --erp-tabs-h: 40px;
+
+  color-scheme: dark;
+}
+
+html.dark {
+  /* —— Element Plus 深色变量覆盖（dark/css-vars.css 之后生效）—— */
+  --el-color-primary: var(--erp-primary);
+  --el-color-primary-light-3: #3757b2;
+  --el-color-primary-light-5: #283e80;
+  --el-color-primary-light-7: #18254c;
+  --el-color-primary-light-8: #101933;
+  --el-color-primary-light-9: #0d1429;
+  --el-color-primary-dark-2: #7296ff;
+
+  --el-color-success: var(--erp-success);
+  --el-color-success-light-3: #188a42;
+  --el-color-success-light-5: #11622f;
+  --el-color-success-light-7: #0a3b1c;
+  --el-color-success-light-8: #072713;
+  --el-color-success-light-9: #0a2013;
+  --el-color-success-dark-2: #4ed17e;
+
+  --el-color-warning: var(--erp-warning);
+  --el-color-warning-light-3: #ac6f08;
+  --el-color-warning-light-5: #7a4f06;
+  --el-color-warning-light-7: #4a2f03;
+  --el-color-warning-light-8: #312002;
+  --el-color-warning-light-9: #241802;
+  --el-color-warning-dark-2: #f7b13c;
+
+  --el-color-danger: var(--erp-danger);
+  --el-color-danger-light-3: #a73030;
+  --el-color-danger-light-5: #782222;
+  --el-color-danger-light-7: #481414;
+  --el-color-danger-light-8: #300e0e;
+  --el-color-danger-light-9: #240d0d;
+  --el-color-danger-dark-2: #f26969;
+
+  --el-color-error: var(--erp-danger);
+  --el-color-error-light-3: #a73030;
+  --el-color-error-light-5: #782222;
+  --el-color-error-light-7: #481414;
+  --el-color-error-light-8: #300e0e;
+  --el-color-error-light-9: #240d0d;
+  --el-color-error-dark-2: #f26969;
+
+  --el-color-info: #909399;
+  --el-color-info-light-3: #65676b;
+  --el-color-info-light-5: #484a4c;
+  --el-color-info-light-7: #2b2c2e;
+  --el-color-info-light-8: #1d1d1f;
+  --el-color-info-light-9: #16161a;
+  --el-color-info-dark-2: #a6a9ad;
+
+  --el-bg-color-page: var(--erp-bg);
+  --el-bg-color: var(--erp-surface);
+  --el-bg-color-overlay: var(--erp-surface-3);
+  --el-text-color-primary: var(--erp-text);
+  --el-text-color-regular: #c6c6d4;
+  --el-text-color-secondary: var(--erp-text-2);
+  --el-text-color-placeholder: var(--erp-text-3);
+  --el-text-color-disabled: #55556a;
+  --el-border-color: var(--erp-border);
+  --el-border-color-light: var(--erp-border);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.05);
+  --el-border-color-extra-light: rgba(255, 255, 255, 0.04);
+  --el-fill-color-blank: var(--erp-surface-2);
+  --el-fill-color: rgba(255, 255, 255, 0.06);
+  --el-fill-color-light: rgba(255, 255, 255, 0.04);
+  --el-fill-color-lighter: rgba(255, 255, 255, 0.03);
+  --el-fill-color-extra-light: rgba(255, 255, 255, 0.02);
+  --el-mask-color: rgba(0, 0, 0, 0.7);
+  --el-border-radius-base: var(--erp-radius-sm);
+  --el-border-radius-small: 6px;
+  --el-font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--erp-bg);
+  color: var(--erp-text);
+  font-family: var(--el-font-family);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 深色滚动条，避免亮色条在深底上跳出来 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* —— 项目内共用的小件（卡片 / 文本截断）—— */
+.erp-card {
+  background: var(--erp-surface);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-card);
+  padding: var(--erp-pad-card);
+}
+
+.erp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.erp-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--erp-text);
+}
+
+.erp-muted {
+  color: var(--erp-text-2);
+}
+
+.erp-weak {
+  color: var(--erp-text-3);
+  font-size: 12px;
+}
+
+.erp-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erp-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}

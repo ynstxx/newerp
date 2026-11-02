@@ -1,12 +1,23 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { api } from './api.js'
 import { i18n, setLang, t } from './i18n.js'
 import { logout as clearState, pickTenant, rememberedTenant, state } from './state.js'
+import AppShell from './AppShell.vue'
 import LoginView from './views/LoginView.vue'
+import WorkbenchView from './views/WorkbenchView.vue'
 import PartyListView from './views/PartyListView.vue'
+import ComingSoonView from './views/ComingSoonView.vue'
 
 const booted = ref(false)
+const collapsed = ref(false)
+const tabs = ref([{ key: 'workbench' }])
+const active = ref('workbench')
+/** 刷新 = 换 key 重挂当前视图，比给每个视图写 reload 接口便宜 */
+const reloadSeq = ref(0)
+
+const viewKey = computed(() => `${state.tenant?.slug ?? '-'}:${active.value}:${reloadSeq.value}`)
 
 async function pickAndLoad(slug) {
   pickTenant(slug)
@@ -40,92 +51,92 @@ async function onLoggedIn() {
   await loadMe()
 }
 
+/** @param {string} key */
+function openTab(key) {
+  if (key === 'member') return
+  if (!tabs.value.some((x) => x.key === key)) tabs.value = [...tabs.value, { key }]
+  active.value = key
+}
+
+/** @param {string} key */
+function closeTab(key) {
+  const idx = tabs.value.findIndex((x) => x.key === key)
+  if (idx < 0) return
+  const next = tabs.value.filter((x) => x.key !== key)
+  tabs.value = next
+  if (active.value === key) active.value = next[Math.max(0, idx - 1)]?.key ?? 'workbench'
+}
+
+function refresh() {
+  reloadSeq.value += 1
+  ElMessage.success(t('top.refreshed'))
+}
+
+/** @param {string} slug */
+async function switchTenant(slug) {
+  try {
+    await pickAndLoad(slug)
+    // 换公司等于换数据集：页签回到工作台，避免看到上一家的残留
+    tabs.value = [{ key: 'workbench' }]
+    active.value = 'workbench'
+    reloadSeq.value += 1
+  } catch (err) {
+    ElMessage.error(err.message)
+  }
+}
+
 async function signOut() {
   try {
     await api.post('/api/auth/logout', {}, { tenant: false })
   } finally {
     clearState()
+    tabs.value = [{ key: 'workbench' }]
+    active.value = 'workbench'
   }
+}
+
+/** @param {string} kw */
+function onSearch(kw) {
+  if (!String(kw ?? '').trim()) return
+  ElMessage.info(t('top.searchTodo'))
 }
 </script>
 
 <template>
-  <div v-if="!booted" class="boot">…</div>
+  <div v-if="!booted" class="boot">
+    <el-skeleton animated :rows="3" class="boot-skel" />
+  </div>
 
   <LoginView v-else-if="!state.user" @logged-in="onLoggedIn" />
 
-  <div v-else class="shell">
-    <header class="bar">
-      <strong>{{ t('app.name') }}</strong>
-
-      <template v-if="state.tenant">
-        <el-divider direction="vertical" />
-        <span class="company">{{ state.tenant.name }}</span>
-        <el-dropdown v-if="state.tenants.length > 1" trigger="click">
-          <el-button link type="primary">{{ t('company.switch') }}</el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="item in state.tenants"
-                :key="item.slug"
-                @click="pickAndLoad(item.slug)"
-              >
-                {{ item.name }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </template>
-
-      <div class="spacer" />
-      <span class="who">{{ t('nav.hello') }}，{{ state.user.displayName }}</span>
-      <el-button link @click="setLang(i18n.lang === 'zh' ? 'en' : 'zh')">{{ t('app.lang') }}</el-button>
-      <el-button link type="danger" @click="signOut">{{ t('nav.logout') }}</el-button>
-    </header>
-
-    <main class="body">
-      <PartyListView v-if="state.tenant" />
-      <el-empty v-else :description="t('company.empty')" />
-    </main>
-  </div>
+  <AppShell
+    v-else
+    :collapsed="collapsed"
+    :tabs="tabs"
+    :active="active"
+    @toggle="collapsed = !collapsed"
+    @refresh="refresh"
+    @open="openTab"
+    @close="closeTab"
+    @logout="signOut"
+    @switch-tenant="switchTenant"
+    @toggle-lang="setLang(i18n.lang === 'zh' ? 'en' : 'zh')"
+    @search="onSearch"
+  >
+    <WorkbenchView v-if="active === 'workbench'" :key="viewKey" @open="openTab" />
+    <PartyListView v-else-if="active === 'party'" :key="viewKey" />
+    <ComingSoonView v-else :key="viewKey" :name="active" @open="openTab" />
+  </AppShell>
 </template>
 
-<style>
-:root {
-  --erp-gap: 12px;
-}
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans SC', sans-serif;
-  background: #f5f7fa;
-}
+<style scoped>
 .boot {
-  padding: 40px;
-  text-align: center;
-  color: #909399;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--erp-bg);
 }
-.shell {
-  min-height: 100vh;
-}
-.bar {
-  display: flex;
-  align-items: center;
-  gap: var(--erp-gap);
-  padding: 10px 20px;
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
-}
-.bar .company {
-  color: #606266;
-}
-.bar .spacer {
-  flex: 1;
-}
-.bar .who {
-  color: #909399;
-  font-size: 13px;
-}
-.body {
-  padding: 16px 20px;
+.boot-skel {
+  width: min(420px, 80vw);
 }
 </style>
