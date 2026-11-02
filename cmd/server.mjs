@@ -1,6 +1,7 @@
 import http from 'node:http'
 import { pathToFileURL } from 'node:url'
 import { assertProductionConfig, config } from '../config.mjs'
+import { readdirSync } from 'node:fs'
 import { createRouter } from '../http/router.mjs'
 import { compose, recover, requestId, log } from '../http/middleware.mjs'
 import { createContext } from '../http/context.mjs'
@@ -10,11 +11,6 @@ import { health } from '../api/health.mjs'
 import { login, logout, me } from '../api/auth.mjs'
 import { createInvite, register, registerInfo } from '../api/registration.mjs'
 import * as party from '../api/party.mjs'
-import { register as registerM1a } from '../api/routes-a.mjs'
-import { register as registerM1b } from '../api/routes-b.mjs'
-import { register as registerM1c } from '../api/routes-c.mjs'
-import { register as registerM1d } from '../api/routes-d.mjs'
-import { register as registerWorkbench } from '../api/routes-w.mjs'
 import * as session from '../auth/session.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
@@ -36,14 +32,22 @@ export function buildRouter() {
   router.get('/api/parties/:id', party.get)
   router.patch('/api/parties/:id', party.update)
   router.del('/api/parties/:id', party.remove)
-  // M1 项目主链：每个切片自己挂路由，本文件只负责叫它们进来
-  registerM1a(router)
-  registerM1b(router)
-  registerM1c(router)
-  registerM1d(router)
-  registerWorkbench(router)
+  // 各业务域自动注册
+  for (const mod of ROUTE_MODULES) mod.register?.(router)
   return router
 }
+
+/**
+ * 各业务域自己的路由都放在 api/routes-<域名>.mjs 里，导出 register(router)。
+ * 这里自动发现 —— 否则每加一个域就要改这个文件，多人并行时它就成排队点。
+ */
+const API_DIR = new URL('./', new URL('../api/', import.meta.url))
+const ROUTE_MODULES = await Promise.all(
+  readdirSync(API_DIR)
+    .filter((f) => /^routes-.+\.mjs$/.test(f))
+    .sort()
+    .map((f) => import(new URL(f, API_DIR).href)),
+)
 
 /** @type {import('../http/middleware.mjs').Middleware} */
 async function authSession(ctx, next) {

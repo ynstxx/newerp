@@ -218,6 +218,34 @@ export function diff(prev, next, dialect) {
   return out
 }
 
+/**
+ * 按外键依赖排序：被引用的表必须先建。
+ * schema/ 是按文件名自动发现的，字母序不保证依赖顺序（如 approval.mjs 引用 platform.mjs 的表），
+ * 所以建表顺序不能靠文件名，得靠这层拓扑排序。
+ * @param {Record<string, RTable>} byName
+ * @returns {Record<string, RTable>}
+ */
+export function orderByDeps(byName) {
+  /** @type {Record<string, RTable>} */
+  const out = {}
+  const pending = Object.values(byName)
+  let guard = pending.length + 1
+  while (pending.length && guard-- > 0) {
+    for (let i = 0; i < pending.length; i++) {
+      const t = pending[i]
+      const ready = t.fk.every((f) => f.ref === t.name || out[f.ref] || !byName[f.ref])
+      if (!ready) continue
+      out[t.name] = t
+      pending.splice(i, 1)
+      i--
+    }
+  }
+  if (pending.length) {
+    throw new Error(`外键存在循环依赖，无法确定建表顺序：${pending.map((t) => t.name).join(', ')}`)
+  }
+  return out
+}
+
 // ── 实际库结构 → 与 canonical() 同形状，用于 check ──────────────────────────
 
 /** @type {Record<string, { columns: string, keys: string }>} */

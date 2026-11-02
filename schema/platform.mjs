@@ -3,7 +3,7 @@
  * 约定：`uniq` / `index` 里的列名在 tenant 表上会被自动加上 tenant_id 前缀（DESIGN §4.2）。
  */
 
-export const platformTables = [
+export const tables = [
   {
     name: 'auth_user',
     tenant: false,

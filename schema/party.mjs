@@ -4,7 +4,7 @@
  * 外键永远复合指向 (tenant_id, id) —— 跨租户引用在物理上不可能。
  */
 
-export const partyTables = [
+export const tables = [
   {
     name: 'org_membership',
     tenant: true,

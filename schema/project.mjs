@@ -4,7 +4,7 @@
  * BOM 物料先用自由文本，item 主数据属采购域（M3）再加 item_id。
  */
 
-export const projectTables = [
+export const tables = [
   {
     name: 'opportunity',
     tenant: true,

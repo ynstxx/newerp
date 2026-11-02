@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { tables, metaTable } from '../schema/index.mjs'
-import { canonical, compare, createTable, describeActual, diff } from './ddl.mjs'
+import { canonical, compare, createTable, describeActual, diff, orderByDeps } from './ddl.mjs'
 import { connect } from './index.mjs'
 import { rebind } from './rebind.mjs'
 
@@ -68,7 +68,7 @@ const allOn = (/** @type {any} */ a, /** @type {any} */ c, /** @type {string} */
  * @param {string} name 如 0002_add_project
  */
 export async function gen(name) {
-  const next = canonical(tables)
+  const next = orderByDeps(canonical(tables))
   /** @type {Record<string, any>} */
   const prev = existsSync(SNAPSHOT) ? JSON.parse(await readFile(SNAPSHOT, 'utf8')) : {}
   let wrote = 0
