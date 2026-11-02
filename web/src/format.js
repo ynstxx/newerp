@@ -4,6 +4,7 @@
  */
 import { computed } from 'vue'
 import { i18n } from './i18n.js'
+import { state } from './state.js'
 
 const locale = computed(() => (i18n.lang === 'zh' ? 'zh-CN' : 'en-US'))
 
@@ -29,9 +30,19 @@ export const fmtDateTime = (v) =>
 export const money = (v) =>
   `¥${new Intl.NumberFormat(locale.value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v ?? 0))}`
 
-/** 没有成员接口时，uuid 只露前 8 位；完整值走 title */
+/** uuid 只露前 8 位；完整值走 title */
 /** @param {unknown} v */
 export const shortId = (v) => (v ? String(v).slice(0, 8) : '—')
+
+/**
+ * 负责人 / 项目经理 → 人名。成员表还没拉到时退回短 id，不会显示空白。
+ * @param {unknown} v
+ */
+export const memberName = (v) => {
+  if (!v) return '—'
+  const hit = state.members.find((m) => m.userId === v)
+  return hit ? hit.displayName : shortId(v)
+}
 
 /** ISO / Date → el-date-picker 要的 YYYY-MM-DD */
 /** @param {unknown} v */

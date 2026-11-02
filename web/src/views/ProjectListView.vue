@@ -11,7 +11,7 @@ import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
 import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
-import { dateInput, fmtDate, fmtDateTime, money, shortId } from '../format.js'
+import { dateInput, fmtDate, fmtDateTime, money, shortId, memberName } from '../format.js'
 
 const STATUSES = ['approved', 'designing', 'quoting', 'signed', 'terminated', 'draft']
 
@@ -221,7 +221,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column :label="t('proj.pm')" width="110">
         <template #default="{ row }">
-          <span v-if="row.pmUserId" class="erp-ellipsis mono" :title="row.pmUserId">{{ shortId(row.pmUserId) }}</span>
+          <span v-if="row.pmUserId" class="erp-ellipsis mono" :title="row.pmUserId">{{ memberName(row.pmUserId) }}</span>
           <span v-else class="erp-weak">{{ t('common.none') }}</span>
         </template>
       </el-table-column>

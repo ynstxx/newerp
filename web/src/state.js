@@ -11,6 +11,8 @@ export const state = reactive({
   tenant: null,
   /** @type {string[]} */
   perms: [],
+  /** @type {{ userId: string, displayName: string }[]} 本公司成员，用于把负责人 uuid 显示成人名 */
+  members: [],
 })
 
 /** @param {string} slug */

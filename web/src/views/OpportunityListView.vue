@@ -10,7 +10,7 @@ import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
 import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
-import { dateInput, fmtDateTime, money, shortId } from '../format.js'
+import { dateInput, fmtDateTime, money, shortId, memberName } from '../format.js'
 
 const STAGES = ['new', 'following', 'won', 'lost']
 
@@ -193,7 +193,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column :label="t('oppty.owner')" width="110">
         <template #default="{ row }">
-          <span v-if="row.ownerId" class="erp-ellipsis mono" :title="row.ownerId">{{ shortId(row.ownerId) }}</span>
+          <span v-if="row.ownerId" class="erp-ellipsis mono" :title="row.ownerId">{{ memberName(row.ownerId) }}</span>
           <span v-else class="erp-weak">{{ t('common.none') }}</span>
         </template>
       </el-table-column>

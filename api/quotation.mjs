@@ -56,7 +56,8 @@ export async function list(ctx) {
   const page = parsePage(ctx, { defaultLimit: 20, maxLimit: 100 })
   const projectId = ctx.url.searchParams.get('projectId') ?? undefined
   const status = ctx.url.searchParams.get('status') ?? undefined
-  sendJson(ctx.res, 200, await svc.listQuotations(ctx, page, { projectId, status }))
+  const keyword = (ctx.url.searchParams.get('q') ?? '').trim().slice(0, 64) || undefined
+  sendJson(ctx.res, 200, await svc.listQuotations(ctx, page, { keyword, projectId, status }))
 }
 
 /** @type {import('../http/router.mjs').Handler} */

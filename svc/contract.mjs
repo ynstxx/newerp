@@ -58,7 +58,7 @@ const termToApi = (r) => ({ id: r.id, seq: r.seq, title: r.title, content: r.con
 /**
  * @param {any} ctx
  * @param {{ limit: number, order: 'asc'|'desc', cursor: { at: Date, id: string } | null }} page
- * @param {{ projectId?: string, status?: string }} filters
+ * @param {{ projectId?: string, status?: string, keyword?: string }} filters
  */
 export async function listContracts(ctx, page, filters) {
   const rows = await store.list(ctx, { ...page, ...filters })

@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { api } from './api.js'
 import { i18n, setLang, t } from './i18n.js'
 import { logout as clearState, pickTenant, rememberedTenant, state } from './state.js'
+import { memberName } from './format.js'
 import AppShell from './AppShell.vue'
 import LoginView from './views/LoginView.vue'
 import WorkbenchView from './views/WorkbenchView.vue'
@@ -29,6 +30,12 @@ async function pickAndLoad(slug) {
   const me = await api.get('/api/me')
   state.perms = me.perms ?? []
   if (me.tenant) state.tenant = { ...me.tenant }
+  // 通讯录：负责人/项目经理列要显示姓名而不是 uuid
+  try {
+    state.members = (await api.get('/api/members')).items ?? []
+  } catch {
+    state.members = []
+  }
 }
 
 async function loadMe() {

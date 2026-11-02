@@ -70,7 +70,8 @@ export async function list(ctx) {
   if (status && !svc.CONTRACT_STATUSES.includes(status)) {
     throw new HttpError(errors.badRequest, { fields: { status: `enum:${svc.CONTRACT_STATUSES.join('|')}` } })
   }
-  sendJson(ctx.res, 200, await svc.listContracts(ctx, page, { projectId, status }))
+  const keyword = (ctx.url.searchParams.get('q') ?? '').trim().slice(0, 64) || undefined
+  sendJson(ctx.res, 200, await svc.listContracts(ctx, page, { keyword, projectId, status }))
 }
 
 /** @type {import('../http/router.mjs').Handler} */

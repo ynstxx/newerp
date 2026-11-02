@@ -16,7 +16,7 @@ export const byCode = (ctx, code) => one(ctx, `SELECT ${COLS} FROM contract WHER
 /**
  * 列表。过滤与排序都来自白名单常量，用户输入只进参数。
  * @param {any} ctx
- * @param {{ limit: number, order: 'asc'|'desc', cursor: { at: Date, id: string } | null, projectId?: string, status?: string }} f
+ * @param {{ limit: number, order: 'asc'|'desc', cursor: { at: Date, id: string } | null, projectId?: string, status?: string, keyword?: string }} f
  */
 export function list(ctx, f) {
   /** @type {string[]} */
@@ -27,6 +27,10 @@ export function list(ctx, f) {
   if (f.projectId) {
     args.push(f.projectId)
     conds.push(`project_id = $${args.length}`)
+  }
+  if (f.keyword) {
+    args.push(`%${f.keyword.toLowerCase()}%`)
+    conds.push(`(LOWER(code) LIKE $${args.length} OR LOWER(name) LIKE $${args.length})`)
   }
   if (f.status) {
     args.push(f.status)

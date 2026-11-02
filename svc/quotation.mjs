@@ -63,7 +63,7 @@ export const lineToApi = (r) => ({
  * 列表：projectId 不是 uuid 就当查不到（不把 PG 类型错误冒成 500）
  * @param {any} ctx
  * @param {{ limit: number, order: 'asc'|'desc', cursor: { at: Date, id: string } | null }} page
- * @param {{ projectId?: string, status?: string }} filters
+ * @param {{ projectId?: string, status?: string, keyword?: string }} filters
  */
 export async function listQuotations(ctx, page, filters) {
   if (filters.projectId && !UUID.test(filters.projectId)) return { items: [], nextCursor: null }
