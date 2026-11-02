@@ -1,7 +1,12 @@
 {
-  "app": { "name": "Integration ERP", "lang": "中文" },
+  "app": {
+    "name": "Integration ERP",
+    "lang": "中文"
+  },
   "login": {
     "title": "Sign in",
+    "tagline": "Projects, quotes and contracts in one chain",
+    "hint": "Sign in with your company email",
     "email": "Email",
     "password": "Password",
     "submit": "Sign in",
@@ -12,9 +17,72 @@
     "empty": "You are not a member of any company yet",
     "switch": "Switch company"
   },
-  "nav": { "logout": "Sign out", "hello": "Hi" },
+  "nav": {
+    "logout": "Sign out",
+    "hello": "Hi"
+  },
+  "menu": {
+    "groupOverview": "Overview",
+    "groupBusiness": "Business",
+    "groupCommerce": "Commerce",
+    "groupSystem": "System",
+    "workbench": "Workbench",
+    "opportunity": "Opportunities",
+    "project": "Projects",
+    "party": "Customers",
+    "quotation": "Quotations",
+    "contract": "Contracts",
+    "member": "Members",
+    "soon": "soon",
+    "memberSoon": "Member management is not available yet"
+  },
+  "top": {
+    "search": "Search projects, customers, contracts",
+    "searchTodo": "Global search is not wired up yet — use the side menu",
+    "notify": "Notifications",
+    "notifyEmpty": "Nothing new",
+    "fold": "Collapse sidebar",
+    "unfold": "Expand sidebar",
+    "refresh": "Refresh",
+    "refreshed": "Refreshed",
+    "logout": "Sign out"
+  },
+  "dash": {
+    "greet": "Good morning, {name}",
+    "statProjects": "Projects",
+    "statOpportunities": "Opportunities",
+    "statContractAmount": "Contract value",
+    "projects": "Projects",
+    "more": "More",
+    "projectEmpty": "No projects yet — winning an opportunity creates one",
+    "goOpportunity": "Go to opportunities",
+    "quick": "Shortcuts",
+    "recent": "Recent activity",
+    "recentEmpty": "No status changes yet",
+    "todos": "To do",
+    "todosEmpty": "Nothing waiting for signature",
+    "todoSign": "To sign",
+    "loading": "Loading",
+    "error": "Failed to load",
+    "retry": "Retry",
+    "sessionExpired": "Session expired, please sign in again",
+    "partialTitle": "Summary failed to load; project list still works"
+  },
+  "pstatus": {
+    "draft": "Draft",
+    "approved": "Approved",
+    "designing": "Designing",
+    "quoting": "Quoting",
+    "signed": "Signed",
+    "terminated": "Terminated"
+  },
+  "soon": {
+    "desc": "The {name} screen is not built yet. The API is already live:",
+    "back": "Back to workbench"
+  },
   "party": {
     "title": "Customers & suppliers",
+    "hint": "Master data",
     "new": "New",
     "edit": "Edit",
     "delete": "Delete",
@@ -35,7 +103,18 @@
     "deleted": "Deleted",
     "confirmDelete": "Delete this record?"
   },
-  "type": { "customer": "Customer", "supplier": "Supplier", "both": "Both" },
-  "status": { "active": "Active", "disabled": "Disabled" },
-  "action": { "save": "Save", "cancel": "Cancel", "saved": "Saved" }
+  "type": {
+    "customer": "Customer",
+    "supplier": "Supplier",
+    "both": "Both"
+  },
+  "status": {
+    "active": "Active",
+    "disabled": "Disabled"
+  },
+  "action": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved"
+  }
 }

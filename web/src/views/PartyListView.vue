@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, fieldErrors } from '../api.js'
+import { Search } from '@element-plus/icons-vue'
 import { t } from '../i18n.js'
 import { state } from '../state.js'
 import PartyForm from './PartyForm.vue'
@@ -67,38 +68,53 @@ onMounted(refresh)
 </script>
 
 <template>
-  <div>
+  <section class="erp-card">
     <div class="head">
-      <strong>{{ t('party.title') }}</strong>
+      <div class="head-text">
+        <span class="erp-card-title">{{ t('party.title') }}</span>
+        <span class="erp-weak">{{ t('party.hint') }}</span>
+      </div>
       <div class="spacer" />
       <el-input
         v-model="keyword"
         :placeholder="t('party.search')"
         clearable
-        style="width: 220px"
+        class="search"
         data-test="search"
         @keyup.enter="refresh"
         @clear="refresh"
-      />
-      <el-select v-model="partyType" clearable :placeholder="t('party.type')" style="width: 140px" @change="refresh">
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
+      <el-select v-model="partyType" clearable :placeholder="t('party.type')" class="type" @change="refresh">
         <el-option v-for="k in ['customer', 'supplier', 'both']" :key="k" :value="k" :label="t(`type.${k}`)" />
       </el-select>
       <el-button type="primary" data-test="new" @click="openNew">{{ t('party.new') }}</el-button>
     </div>
 
-    <el-table :data="items" v-loading="loading" border stripe empty-text=" " data-test="table" @row-dblclick="openEdit">
-      <el-table-column prop="code" :label="t('party.code')" width="140" />
-      <el-table-column prop="name" :label="t('party.name')" min-width="180" />
+    <el-table :data="items" v-loading="loading" border empty-text=" " data-test="table" @row-dblclick="openEdit">
+      <el-table-column prop="code" :label="t('party.code')" width="150">
+        <template #default="{ row }">
+          <span class="code erp-ellipsis" :title="row.code">{{ row.code }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="name" :label="t('party.name')" min-width="200">
+        <template #default="{ row }">
+          <span class="erp-ellipsis name" :title="row.name">{{ row.name }}</span>
+        </template>
+      </el-table-column>
       <el-table-column :label="t('party.type')" width="110">
         <template #default="{ row }">
-          <el-tag size="small" :type="row.partyType === 'customer' ? 'success' : row.partyType === 'supplier' ? 'warning' : 'info'">
+          <el-tag size="small" effect="dark" round :type="row.partyType === 'customer' ? 'success' : row.partyType === 'supplier' ? 'warning' : 'info'">
             {{ t(`type.${row.partyType}`) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('party.status')" width="90">
+      <el-table-column :label="t('party.status')" width="96">
         <template #default="{ row }">
-          <el-tag size="small" :type="row.status === 'active' ? 'primary' : 'info'" effect="plain">
+          <el-tag size="small" :type="row.status === 'active' ? 'primary' : 'info'" effect="plain" round>
             {{ t(`status.${row.status}`) }}
           </el-tag>
         </template>
@@ -111,17 +127,18 @@ onMounted(refresh)
           <el-button v-if="canDelete()" link type="danger" @click="remove(row)">{{ t('party.delete') }}</el-button>
         </template>
       </el-table-column>
+      <template #empty>
+        <el-empty :image-size="64" :description="t('party.empty')" />
+      </template>
     </el-table>
-
-    <div v-if="!loading && !items.length" class="empty">{{ t('party.empty') }}</div>
 
     <div class="foot">
       <el-button v-if="cursor" :loading="loading" @click="load()">{{ t('party.loadMore') }}</el-button>
-      <span v-else-if="items.length" class="muted">{{ t('party.noMore') }}</span>
+      <span v-else-if="items.length" class="erp-weak">{{ t('party.noMore') }}</span>
     </div>
 
     <PartyForm v-model="drawer" :party="editing" @saved="refresh" />
-  </div>
+  </section>
 </template>
 
 <style scoped>
@@ -130,21 +147,39 @@ onMounted(refresh)
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
-.head .spacer {
+.head-text {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.spacer {
   flex: 1;
+}
+.search {
+  width: 220px;
+}
+.type {
+  width: 140px;
+}
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--erp-text-2);
+}
+.name {
+  color: var(--erp-text);
 }
 .foot {
   margin-top: 12px;
   text-align: center;
 }
-.empty {
-  padding: 24px;
-  text-align: center;
-  color: #909399;
-}
-.muted {
-  color: #c0c4cc;
-  font-size: 12px;
+@media (max-width: 900px) {
+  .search,
+  .type {
+    width: 100%;
+  }
 }
 </style>

@@ -16,6 +16,16 @@ export function t(key) {
   return key.split('.').reduce((node, part) => (node ? node[part] : undefined), dict) ?? key
 }
 
+/**
+ * 带占位符的 t()：`tp('dash.greet', { name })` →「早安，张三」。
+ * 只做 {name} 这种简单替换，够用；复数/日期规则不引 vue-i18n。
+ * @param {string} key
+ * @param {Record<string, string | number>} vars
+ */
+export function tp(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, (m, name) => (name in vars ? String(vars[name]) : m))
+}
+
 /** @param {'zh'|'en'} lang */
 export function setLang(lang) {
   i18n.lang = lang
