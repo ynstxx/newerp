@@ -96,6 +96,10 @@ export async function createRequirement(ctx, input) {
 export async function updateRequirement(ctx, id, patch) {
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
+  // 确认后即锁定：方案 BOM 是照需求快照做的，回头改需求会让下游对不上
+  if (cur.status !== 'draft') {
+    throw new HttpError(errors.conflict, { reason: `需求已是 ${cur.status}，不可再改`, allowed: [] })
+  }
 
   const now = new Date()
   const row = {

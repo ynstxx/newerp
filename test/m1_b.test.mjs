@@ -90,8 +90,12 @@ test('需求：创建 draft → confirmed，confirmed 后再推进/非法跳转�
   assert.equal(req.projectId, projectA)
   assert.equal(req.confirmedAt, null)
 
-  // draft 直接跳到不存在的目标 → 409，带 allowed
-  const bad = await app.call('POST', `/t/${slugA}/api/requirements/${req.id}/advance`, { to: 'approved' }, cookieA)
+  // 不是枚举值的目标 → 400（与其它四个切片的 advance 语义对齐）
+  const bogus = await app.call('POST', `/t/${slugA}/api/requirements/${req.id}/advance`, { to: 'approved' }, cookieA)
+  assert.equal(bogus.status, 400)
+
+  // 是枚举值但当前状态不允许 → 409，带 allowed
+  const bad = await app.call('POST', `/t/${slugA}/api/requirements/${req.id}/advance`, { to: 'draft' }, cookieA)
   assert.equal(bad.status, 409)
   assert.deepEqual((await jsonOf(bad)).error.details.allowed, ['confirmed'])
 

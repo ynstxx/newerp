@@ -163,15 +163,33 @@ export async function advanceContract(ctx, id, to) {
     const project = await store.projectById(tx, cur.project_id)
     if (!project) throw new HttpError(errors.notFound)
 
-    const n = await store.markSigned(tx, { id, signAt, now })
-    if (!n) throw new HttpError(errors.conflict, { reason: '并发修改，请重试' })
+    const n = await store.markSigned(tx, { id, from: cur.status, to, signAt, now })
+    if (!n) {
+      const fresh = await store.byId(tx, id)
+      throw new HttpError(errors.conflict, {
+        reason: `合同已是 ${fresh?.status ?? '未知'}，并发修改请重试`,
+        allowed: allowedNext(TRANSITIONS, fresh?.status ?? cur.status),
+      })
+    }
 
-    if (to === 'signed') {
+    if (to === 'signed' && project.status === 'signed') {
+      // 同一项目的第二份合同（增补/换版）：项目已是终态，联动幂等跳过，不重复写历史
+    } else if (to === 'signed') {
       // 项目侧也必须走自己的状态机：项目不在「报价中」就直接签约 = 跳级，拒绝，
       // 否则项目历史里会凭空多出一条 designing→signed（M1 的验收要求正是“不可跳级”）。
       assertTransition('project', PROJECT_TRANSITIONS, project.status, 'signed')
-      const p = await store.markProjectSigned(tx, { projectId: cur.project_id, now })
-      if (!p) throw new HttpError(errors.notFound)
+      const p = await store.markProjectSigned(tx, {
+        projectId: cur.project_id,
+        from: project.status,
+        amount: cur.amount,
+        now,
+      })
+      if (!p) {
+        throw new HttpError(errors.conflict, {
+          reason: '项目状态已被他人推进，请刷新',
+          allowed: allowedNext(PROJECT_TRANSITIONS, project.status),
+        })
+      }
       await store.insertStageLog(tx, {
         id: randomUUID(),
         projectId: cur.project_id,

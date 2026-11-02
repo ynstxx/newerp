@@ -146,16 +146,23 @@ test('非法跳转一律 409，错误体带 allowed', async (t) => {
   assert.equal((await jsonOf(await call('GET', `/t/${slugA}/api/opportunities/${opp.id}`))).stage, 'new')
 
   const { project } = await makeProject(`O-${run}-2b`)
-  const badProject = await call('POST', `/t/${slugA}/api/projects/${project.id}/advance`, { to: 'signed' })
+  // draft 不能直接跳 designing
+  const badProject = await call('POST', `/t/${slugA}/api/projects/${project.id}/advance`, { to: 'designing' })
   assert.equal(badProject.status, 409)
   assert.deepEqual((await jsonOf(badProject)).error.details.allowed, ['approved', 'terminated'])
+
+  // signed 只能由合同签署推进，这里提前拦住（不然零合同也算已签约）
+  const badSigned = await call('POST', `/t/${slugA}/api/projects/${project.id}/advance`, { to: 'signed' })
+  assert.equal(badSigned.status, 409)
+  assert.match((await jsonOf(badSigned)).error.details.reason, /只能由合同签署推进/)
 })
 
-test('项目 draft→approved→designing→quoting→signed 正常推进，stage_log 逐条累积', async (t) => {
+test('项目 draft→approved→designing→quoting 正常推进，stage_log 逐条累积', async (t) => {
   if (!dbUp) return t.skip('需要数据库')
 
   const { project } = await makeProject(`O-${run}-3`)
-  const chain = ['approved', 'designing', 'quoting', 'signed']
+  // signed 不在这里测：它只能由合同签署联动产生（见 test/m1_chain.test.mjs）
+  const chain = ['approved', 'designing', 'quoting']
   for (const to of chain) {
     const res = await call('POST', `/t/${slugA}/api/projects/${project.id}/advance`, { to, note: `推进 ${to}` })
     assert.equal(res.status, 200, `推进到 ${to} 失败`)
@@ -165,7 +172,7 @@ test('项目 draft→approved→designing→quoting→signed 正常推进，stag
   }
 
   const logs = await jsonOf(await call('GET', `/t/${slugA}/api/projects/${project.id}/stages`))
-  assert.equal(logs.items.length, 5)
+  assert.equal(logs.items.length, 4)
   assert.deepEqual(
     logs.items.map((/** @type {any} */ l) => [l.fromStatus, l.toStatus]),
     [
@@ -173,14 +180,13 @@ test('项目 draft→approved→designing→quoting→signed 正常推进，stag
       ['draft', 'approved'],
       ['approved', 'designing'],
       ['designing', 'quoting'],
-      ['quoting', 'signed'],
     ],
   )
   assert.ok(logs.items.every((/** @type {any} */ l) => l.actorId))
 
   // 状态推进后过滤能命中
-  const signed = await jsonOf(await call('GET', `/t/${slugA}/api/projects?status=signed&q=O-${run}-3`))
-  assert.ok(signed.items.some((/** @type {any} */ p) => p.id === project.id))
+  const quoting = await jsonOf(await call('GET', `/t/${slugA}/api/projects?status=quoting&q=O-${run}-3`))
+  assert.ok(quoting.items.some((/** @type {any} */ p) => p.id === project.id))
   const drafts = await jsonOf(await call('GET', `/t/${slugA}/api/projects?status=draft&q=O-${run}-3`))
   assert.ok(!drafts.items.some((/** @type {any} */ p) => p.id === project.id))
 })
@@ -244,14 +250,36 @@ test('跨租户：B 读/改/推进 A 的商机与项目一律 404，B 的列表�
   const listProjB = await jsonOf(await call('GET', `/t/${slugB}/api/projects?limit=100`, undefined, cookieB))
   assert.ok(!listProjB.items.some((/** @type {any} */ p) => p.id === project.id))
 
-  // 拿 A 的客户 id 在 B 建商机 → 400（客户在 B 不存在）
+  // 拿 A 的客户 id 在 B 建商机 → 404（越权即不存在，不能靠 400 泄漏存在性）
   const crossed = await call('POST', `/t/${slugB}/api/opportunities`, { ...oppOf(`O-${run}-5x`), partyId: partyA }, cookieB)
-  assert.equal(crossed.status, 400)
-  assert.equal((await jsonOf(crossed)).error.details.fields.partyId, 'not_found')
+  assert.equal(crossed.status, 404)
 
   // 不存在 / 非 uuid 的 id 都当 404
   assert.equal((await call('GET', `/t/${slugA}/api/opportunities/not-a-uuid`)).status, 404)
   assert.equal((await call('GET', `/t/${slugA}/api/projects/${randomUUID()}`)).status, 404)
+})
+
+test('跨租户用户引用：ownerId / pmUserId 必须是本公司成员', async (t) => {
+  if (!dbUp) return t.skip('需要数据库')
+
+  // B 的 owner 用户 id（全局表 auth_user 里真实存在，复合外键管不到）
+  const meB = await jsonOf(await call('GET', `/t/${slugB}/api/me`, undefined, cookieB))
+  const foreignUserId = meB.user.id
+
+  const reject = await call('POST', `/t/${slugA}/api/opportunities`, {
+    ...oppOf(`O-${run}-9`),
+    ownerId: foreignUserId,
+  })
+  assert.equal(reject.status, 400)
+  assert.equal((await jsonOf(reject)).error.details.fields.ownerId, 'not_member')
+
+  const { project } = await makeProject(`O-${run}-9b`)
+  const badPm = await call('PATCH', `/t/${slugA}/api/projects/${project.id}`, {
+    pmUserId: foreignUserId,
+    version: project.version,
+  })
+  assert.equal(badPm.status, 400)
+  assert.equal((await jsonOf(badPm)).error.details.fields.pmUserId, 'not_member')
 })
 
 test('未知字段 / 缺失 / 非法金额 / 非法日期 / 未知目标 → 400', async (t) => {
@@ -316,9 +344,10 @@ test('PATCH：部分更新 + version 自增，旧 version 409，编码重复 409
 
   // 项目 PATCH：名字 / 项目经理 / 起止日期
   const { project } = await makeProject(`O-${run}-7p`)
+  const meA = await jsonOf(await call('GET', `/t/${slugA}/api/me`))
   const pj = await call('PATCH', `/t/${slugA}/api/projects/${project.id}`, {
     name: '项目改名',
-    pmUserId: randomUUID(),
+    pmUserId: meA.user.id,
     startDate: '2026-07-01',
     endDate: '2026-12-31',
     version: project.version,

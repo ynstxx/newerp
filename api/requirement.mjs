@@ -20,7 +20,7 @@ const SPEC = {
 }
 
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
-const ADVANCE_SPEC = { to: { type: 'string', required: true, max: 32 } }
+const ADVANCE_SPEC = { to: { type: 'enum', values: svc.REQUIREMENT_STATUSES, required: true } }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

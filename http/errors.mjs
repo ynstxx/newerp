@@ -43,8 +43,11 @@ export function langOf(headers) {
  */
 export function sendError(res, def, requestId, details) {
   if (res.headersSent) return void res.destroy()
+  // 409 之类的中性错误码有很多种真实原因，对外 message 优先用调用方给的 reason
+  const reason = /** @type {any} */ (details)?.reason
+  const fallback = langOf(res.req?.headers ?? {}) === 'en' ? def.en : def.zh
   /** @type {{ error: { code: string, message: string, details?: unknown } }} */
-  const body = { error: { code: def.code, message: langOf(res.req?.headers ?? {}) === 'en' ? def.en : def.zh } }
+  const body = { error: { code: def.code, message: typeof reason === 'string' && reason ? reason : fallback } }
   if (details !== undefined) body.error.details = details
   const json = JSON.stringify({ ...body, requestId })
   res.writeHead(def.status, {

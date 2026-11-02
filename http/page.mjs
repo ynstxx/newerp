@@ -6,6 +6,8 @@ import { HttpError, errors } from './errors.mjs'
  * ponytail: 行比较 (created_at, id) < (?, ?) 两库都支持，不需要 OFFSET 也不需要窗口函数
  */
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /** @param {string} s */
 const enc = (s) => Buffer.from(s, 'utf8').toString('base64url')
 /** @param {string} s */
@@ -26,7 +28,10 @@ export function parsePage(ctx, opts = {}) {
   if (raw) {
     const [at, id] = dec(raw).split('|')
     const date = new Date(at ?? '')
-    if (!id || Number.isNaN(date.getTime())) throw new HttpError(errors.badRequest, { reason: 'cursor 无效' })
+    // id 必须是 uuid：直接透传会让 PG 把它当 uuid 推断失败，冒成 500
+    if (!UUID.test(id ?? '') || Number.isNaN(date.getTime())) {
+      throw new HttpError(errors.badRequest, { reason: 'cursor 无效' })
+    }
     cursor = { at: date, id }
   }
   return { limit, order, cursor }

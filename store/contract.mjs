@@ -101,16 +101,16 @@ export const insertTerm = (ctx, p) =>
 
 /**
  * 签约：状态与签署时间一起落库，不单独放一个裸 UPDATE status。
+ * `AND status = $5` 是并发兜底 —— 两个并发 advance 只有一个能改到行。
  * @param {any} ctx
- * @param {{ id: string, signAt: Date, now: Date }} p
+ * @param {{ id: string, from: string, to: string, signAt: Date, now: Date }} p
  */
 export const markSigned = (ctx, p) =>
-  exec(ctx, `UPDATE contract SET status = $1, sign_at = $2, updated_at = $3 WHERE $t AND id = $4`, [
-    'signed',
-    p.signAt,
-    p.now,
-    p.id,
-  ])
+  exec(
+    ctx,
+    `UPDATE contract SET status = $1, sign_at = $2, updated_at = $3 WHERE $t AND id = $4 AND status = $5`,
+    [p.to, p.signAt, p.now, p.id, p.from],
+  )
 
 /**
  * ---- 跨切片只读/联动（合同读报价、签约推项目）----
@@ -139,15 +139,19 @@ export const projectById = (ctx, id) =>
   one(ctx, `SELECT id, code, status, party_id, version FROM project WHERE $t AND id = $1`, [id])
 
 /**
- * 签约联动：project 直接推到 signed（DESIGN 决策 4/6 —— 不走审批，签署即生效）。
- * @param {any} ctx @param {{ projectId: string, now: Date }} p
+ * 签约联动：project 推到 signed，并把合同额落到项目上。
+ * `AND status = $4` 让 project 的状态迁移在 DB 层也有兜底（DESIGN §7.3 唯一写入口纪律），
+ * 影响 0 行 → 上层按并发冲突处理，而不是当成"单据不存在"。
+ * @param {any} ctx @param {{ projectId: string, from: string, amount: string, now: Date }} p
  */
 export const markProjectSigned = (ctx, p) =>
-  exec(ctx, `UPDATE project SET status = $1, version = version + 1, updated_at = $2 WHERE $t AND id = $3`, [
-    'signed',
-    p.now,
-    p.projectId,
-  ])
+  exec(
+    ctx,
+    `UPDATE project
+        SET status = $1, contract_amt = $2, version = version + 1, updated_at = $3
+      WHERE $t AND id = $4 AND status = $5`,
+    ['signed', p.amount, p.now, p.projectId, p.from],
+  )
 
 /**
  * @param {any} ctx

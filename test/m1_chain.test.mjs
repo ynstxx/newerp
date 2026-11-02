@@ -171,9 +171,15 @@ test('状态机不可跳级：每一处非法跳转都 409 且带 allowed', asyn
   const won = await post(A(`/api/opportunities/${opp.body.id}/advance`), { to: 'won' })
   const pid = won.body.project.id
   await post(A(`/api/projects/${pid}/advance`), { to: 'approved' })
-  const pjump = await post(A(`/api/projects/${pid}/advance`), { to: 'signed' })
+  // approved 不能直接 quoting
+  const pjump = await post(A(`/api/projects/${pid}/advance`), { to: 'quoting' })
   assert.equal(pjump.status, 409)
   assert.ok(pjump.body.error.details.allowed.includes('designing'))
+
+  // 更不能自己把自己置为已签约 —— signed 只由合同签署联动产生
+  const selfSign = await post(A(`/api/projects/${pid}/advance`), { to: 'signed' })
+  assert.equal(selfSign.status, 409)
+  assert.match(selfSign.body.error.details.reason, /只能由合同签署推进/)
 
   // 报价 draft 不能直接 accepted（需要一个方案）
   await post(A(`/api/projects/${pid}/advance`), { to: 'designing' })

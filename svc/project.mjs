@@ -1,8 +1,9 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import * as audit from '../store/audit.mjs'
+import * as membership from '../store/membership.mjs'
 import * as store from '../store/project.mjs'
 import { assertTransition } from './transition.mjs'
 
@@ -101,12 +102,18 @@ export async function listStages(ctx, id) {
 export async function updateProject(ctx, id, patch) {
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
+  if (cur.status === 'signed' || cur.status === 'terminated') {
+    throw new HttpError(errors.conflict, { reason: `${cur.status} 的项目不可再改`, allowed: [] })
+  }
   if (patch.version !== undefined && patch.version !== cur.version) {
     throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
   }
   const pmUserId = 'pmUserId' in patch ? (patch.pmUserId ?? null) : cur.pm_user_id
   if (pmUserId !== null && !UUID.test(pmUserId)) {
     throw new HttpError(errors.badRequest, { fields: { pmUserId: 'uuid' } })
+  }
+  if (pmUserId !== null && !(await membership.memberExists(ctx, pmUserId))) {
+    throw new HttpError(errors.badRequest, { fields: { pmUserId: 'not_member' } })
   }
 
   const now = new Date()
@@ -152,6 +159,13 @@ export async function updateProject(ctx, id, patch) {
  * @param {{ to: string, note?: string | null }} input
  */
 export async function advanceProject(ctx, id, input) {
+  // signed 只能由合同签署联动产生，否则「零合同也算已签约」——M1 验收要求不可跳级
+  if (input.to === 'signed') {
+    throw new HttpError(errors.conflict, {
+      reason: 'signed 只能由合同签署推进，请走 POST /api/contracts/:id/advance',
+      allowed: [],
+    })
+  }
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
 
@@ -193,8 +207,10 @@ export async function advanceProject(ctx, id, input) {
  * @param {{ note?: string | null, at: Date }} opts
  */
 export async function createProjectForOpportunity(tx, opp, opts) {
-  // project.code 是 varchar(64)，'P-' 前缀后超长就截断（商机 code 本身可到 64）
-  const code = `P-${opp.code}`.slice(0, 64)
+  // 派生编码：超长时用短哈希而不是截断 —— 截断会让两个不同商机算出同一个 code
+  const derived = `P-${opp.code}`
+  const code =
+    derived.length <= 64 ? derived : `${derived.slice(0, 55)}-${createHash('sha1').update(opp.code).digest('hex').slice(0, 8)}`
   if (await store.byCode(tx, code)) {
     throw new HttpError(errors.conflict, { reason: `立项编码 ${code} 已存在` })
   }

@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import * as audit from '../store/audit.mjs'
+import * as membership from '../store/membership.mjs'
 import * as store from '../store/opportunity.mjs'
 import { createProjectForOpportunity } from './project.mjs'
 import { assertTransition } from './transition.mjs'
@@ -73,16 +74,20 @@ export async function getOpportunity(ctx, id) {
  */
 async function assertParty(ctx, partyId) {
   if (!UUID.test(partyId)) throw new HttpError(errors.badRequest, { fields: { partyId: 'uuid' } })
-  if (!(await store.partyExists(ctx, partyId))) {
-    throw new HttpError(errors.badRequest, { fields: { partyId: 'not_found' } })
-  }
+  // 跨租户的客户一律按不存在处理（404，不是 400 —— 与 §4.3「越权即不存在」一致）
+  if (!(await store.partyExists(ctx, partyId))) throw new HttpError(errors.notFound)
 }
 
 /**
  * @param {string | null} ownerId
  */
-function assertOwner(ownerId) {
-  if (ownerId !== null && !UUID.test(ownerId)) throw new HttpError(errors.badRequest, { fields: { ownerId: 'uuid' } })
+/** @param {any} ctx @param {string | null} ownerId */
+async function assertOwner(ctx, ownerId) {
+  if (ownerId === null) return
+  if (!UUID.test(ownerId)) throw new HttpError(errors.badRequest, { fields: { ownerId: 'uuid' } })
+  if (!(await membership.memberExists(ctx, ownerId))) {
+    throw new HttpError(errors.badRequest, { fields: { ownerId: 'not_member' } })
+  }
 }
 
 /**
@@ -96,7 +101,7 @@ export async function createOpportunity(ctx, input) {
   await assertParty(ctx, input.partyId)
 
   const ownerId = input.ownerId ?? null
-  assertOwner(ownerId)
+  await assertOwner(ctx, ownerId)
 
   const now = new Date()
   const id = randomUUID()
@@ -139,6 +144,10 @@ export async function createOpportunity(ctx, input) {
 export async function updateOpportunity(ctx, id, patch) {
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
+  // won/lost 是终态：改客户或编码会打穿已经建出来的项目/报价/合同
+  if (cur.stage === 'won' || cur.stage === 'lost') {
+    throw new HttpError(errors.conflict, { reason: `${cur.stage} 的商机不可再改`, allowed: [] })
+  }
   if (patch.version !== undefined && patch.version !== cur.version) {
     throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
   }
@@ -149,7 +158,7 @@ export async function updateOpportunity(ctx, id, patch) {
   const partyId = patch.partyId ?? cur.party_id
   if (partyId !== cur.party_id) await assertParty(ctx, partyId)
   const ownerId = 'ownerId' in patch ? (patch.ownerId ?? null) : cur.owner_id
-  assertOwner(ownerId)
+  await assertOwner(ctx, ownerId)
 
   const now = new Date()
   const row = {
