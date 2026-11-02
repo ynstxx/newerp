@@ -14,6 +14,7 @@ import { register as registerM1a } from '../api/routes-a.mjs'
 import { register as registerM1b } from '../api/routes-b.mjs'
 import { register as registerM1c } from '../api/routes-c.mjs'
 import { register as registerM1d } from '../api/routes-d.mjs'
+import { register as registerWorkbench } from '../api/routes-w.mjs'
 import * as session from '../auth/session.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
@@ -40,6 +41,7 @@ export function buildRouter() {
   registerM1b(router)
   registerM1c(router)
   registerM1d(router)
+  registerWorkbench(router)
   return router
 }
 
