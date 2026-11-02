@@ -642,5 +642,1083 @@
       ]
     ],
     "fk": []
+  },
+  "opportunity": {
+    "name": "opportunity",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "party_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "owner_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "stage",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "est_amount",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "expected_sign_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "party_id"
+      ],
+      [
+        "tenant_id",
+        "stage"
+      ],
+      [
+        "tenant_id",
+        "owner_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "party_id"
+        ],
+        "ref": "party",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "project": {
+    "name": "project",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "party_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "opportunity_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "contract_amt",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "pm_user_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "start_date",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "end_date",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "party_id"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ],
+      [
+        "tenant_id",
+        "opportunity_id"
+      ],
+      [
+        "tenant_id",
+        "pm_user_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "party_id"
+        ],
+        "ref": "party",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "opportunity_id"
+        ],
+        "ref": "opportunity",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "project_stage_log": {
+    "name": "project_stage_log",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "project_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "from_status",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "to_status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "actor_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "project_id",
+        "at"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "project_id"
+        ],
+        "ref": "project",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "requirement": {
+    "name": "requirement",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "project_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "title",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "content",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "confirmed_by",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "confirmed_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "project_id"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "project_id"
+        ],
+        "ref": "project",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "design_doc": {
+    "name": "design_doc",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "project_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "title",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "content",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "confirmed_by",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "confirmed_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "project_id",
+        "version"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "project_id"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "project_id"
+        ],
+        "ref": "project",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "bom_line": {
+    "name": "bom_line",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "design_doc_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "line_no",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "item_name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "spec",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "uom",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "qty",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "unit_cost",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "design_doc_id",
+        "line_no"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "design_doc_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "design_doc_id"
+        ],
+        "ref": "design_doc",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "quotation": {
+    "name": "quotation",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "project_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "party_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "amount",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "valid_until",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "sent_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "decided_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "project_id"
+      ],
+      [
+        "tenant_id",
+        "party_id"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "project_id"
+        ],
+        "ref": "project",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "party_id"
+        ],
+        "ref": "party",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "quotation_line": {
+    "name": "quotation_line",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "quotation_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "line_no",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "item_name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "spec",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "uom",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "qty",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "price",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "amount",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "quotation_id",
+        "line_no"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "quotation_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "quotation_id"
+        ],
+        "ref": "quotation",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "contract": {
+    "name": "contract",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "project_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "quotation_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "party_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "amount",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "sign_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "project_id"
+      ],
+      [
+        "tenant_id",
+        "party_id"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ],
+      [
+        "tenant_id",
+        "quotation_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "project_id"
+        ],
+        "ref": "project",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "party_id"
+        ],
+        "ref": "party",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "quotation_id"
+        ],
+        "ref": "quotation",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "contract_line": {
+    "name": "contract_line",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "contract_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "line_no",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "item_name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "spec",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "uom",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "qty",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "price",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "amount",
+        "t": "money",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "contract_id",
+        "line_no"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "contract_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "contract_id"
+        ],
+        "ref": "contract",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "contract_term": {
+    "name": "contract_term",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "contract_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "seq",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "title",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "content",
+        "t": "text",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "contract_id",
+        "seq"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "contract_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "contract_id"
+        ],
+        "ref": "contract",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
   }
 }

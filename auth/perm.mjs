@@ -8,13 +8,55 @@ export const PERM = {
   partyDelete: 'party:delete',
   memberView: 'member:view',
   memberManage: 'member:manage',
+  // M1 项目主链：每个实体 view/create/update，另加一个终止权
+  opportunityView: 'opportunity:view',
+  opportunityCreate: 'opportunity:create',
+  opportunityUpdate: 'opportunity:update',
+  projectView: 'project:view',
+  projectCreate: 'project:create',
+  projectUpdate: 'project:update',
+  projectTerminate: 'project:terminate',
+  requirementView: 'requirement:view',
+  requirementCreate: 'requirement:create',
+  requirementUpdate: 'requirement:update',
+  designView: 'design:view',
+  designCreate: 'design:create',
+  designUpdate: 'design:update',
+  quotationView: 'quotation:view',
+  quotationCreate: 'quotation:create',
+  quotationUpdate: 'quotation:update',
+  contractView: 'contract:view',
+  contractCreate: 'contract:create',
+  contractUpdate: 'contract:update',
 }
 
-/** role.code → 权限点。`*` = 全部。M0 只支 owner/member 两个角色。 */
+/** role.code → 权限点。`*` = 全部。M0/M1 只支 owner/member 两个角色。 */
 /** @type {Record<string, string[]>} */
 export const ROLE_PERMS = {
   owner: ['*'],
-  member: [PERM.partyView, PERM.partyCreate, PERM.partyUpdate],
+  member: [
+    PERM.partyView,
+    PERM.partyCreate,
+    PERM.partyUpdate,
+    PERM.opportunityView,
+    PERM.opportunityCreate,
+    PERM.opportunityUpdate,
+    PERM.projectView,
+    PERM.projectCreate,
+    PERM.projectUpdate,
+    PERM.requirementView,
+    PERM.requirementCreate,
+    PERM.requirementUpdate,
+    PERM.designView,
+    PERM.designCreate,
+    PERM.designUpdate,
+    PERM.quotationView,
+    PERM.quotationCreate,
+    PERM.quotationUpdate,
+    PERM.contractView,
+    PERM.contractCreate,
+    PERM.contractUpdate,
+  ],
 }
 
 /** @type {Record<string, string>} */
