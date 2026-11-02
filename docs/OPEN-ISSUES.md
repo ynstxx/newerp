@@ -30,4 +30,5 @@
 | 12 | `stock_move.sn_list` 是冗余字符串 | 一条流水多个 SN 时存 `|SN1|SN2|`，`snTrace` 用 LIKE 匹配。SN 追溯要更细时改成事件表 |
 | 13 | 前端未接入成员通讯录到编辑表单 | 列表里已显示姓名，但「项目经理/负责人」编辑框还是手填 uuid |
 | 14 | 报价/合同列表的 `q` 只搜 code/name/note | 不搜客户名（要 JOIN party），够用就先不 JOIN |
-| 15 | CI 只跑 PG + MySQL + dual + web 四个作业 | 没有「非 UTC 时区」之外的矩阵维度；`TZ=Asia/Shanghai` 已经在 mysql 作业里 |
+| 15 | `store/work.mjs` 的 `pageQuery()` 用 `${table}` 动态表名 | 9 张同构表一份 CRUD 助手，表名全部来自同文件常量。租户守卫已放宽为「动态表名 + 没有 `$t` 才拦」，但静态检查看不出是哪张表 —— 新增调用点要人工确认传的是常量 |
+| 16 | CI 只跑 PG + MySQL + dual + web 四个作业 | 没有「非 UTC 时区」之外的矩阵维度；`TZ=Asia/Shanghai` 已经在 mysql 作业里 |

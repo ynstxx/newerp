@@ -23,7 +23,10 @@ export function scan(sql) {
   const s = sql.trim()
   if (!/\b(select|insert|update|delete)\b/i.test(s)) return []
   if (s.includes('tenant-free')) return []
-  if (/\b(from|into|update|join)\s+\$\{/i.test(s)) return ['<动态表名>']
+  // 动态表名：只有「同时没有 $t」时才拦。
+  // 同构表的通用 CRUD 助手是合理写法（9 张表一份代码），它带 $t 就没有漏租户谓词的风险；
+  // 反过来，动态表名 + 没有 $t 才真的可能绕过守卫。
+  if (!s.includes('$t') && /\b(from|into|update|join)\s+\$\{/i.test(s)) return ['<动态表名>']
   const touched = TENANT_TABLES.filter((t) => new RegExp(`\\b${t}\\b`).test(s))
   if (!touched.length) return []
   if (/^insert\s+into\s+[`"]?\w+[`"]?\s*\([^)]*\btenant_id\b/i.test(s)) return []
@@ -55,8 +58,10 @@ test('守卫本身有效：漏 $t 会被抓，三种例外放行', () => {
   assert.deepEqual(scan(`SELECT id FROM party WHERE id = $1 /* tenant-free */`), [], '显式标记应放行')
   // 全局表不受管
   assert.deepEqual(scan(`SELECT id FROM auth_user WHERE email = $1`), [])
-  // 表名插值等于绕过守卫
-  assert.deepEqual(scan('SELECT id FROM ${TBL} WHERE $t'), ['<动态表名>'])
+  // 动态表名 + 没有 $t → 拦（这才是绕过守卫的写法）
+  assert.deepEqual(scan('SELECT id FROM ${TBL} WHERE status = $1'), ['<动态表名>'])
+  // 动态表名 + 带 $t → 放行（同构表的通用助手是合理写法）
+  assert.deepEqual(scan('SELECT ${cols} FROM ${table} WHERE $t'), [])
 })
 
 test('store/**/*.mjs 全部通过租户守卫（含子目录）', async () => {

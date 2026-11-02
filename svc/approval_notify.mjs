@@ -94,15 +94,18 @@ export async function emitPending(ctx, instance) {
 }
 
 /**
- * 审批结束（通过/拒绝）→ 通知提交人。
+ * 审批结束（通过/拒绝/钩子失败）→ 通知提交人。
+ * failed 单独一种事件：审批本身过了，但业务落库失败（如领料库存不足），
+ * 对提交人来说这不是「已通过」，必须能看出区别。
  * @param {any} ctx
  * @param {any} instance
- * @param {'approve'|'reject'} action
+ * @param {'approve'|'reject'|'failed'} action
  */
 export async function emitFinished(ctx, instance, action) {
   const submitter = pick(instance, 'submitter_id', 'submitterId')
   if (!submitter) return
-  const event = action === 'approve' ? 'approval.approved' : 'approval.rejected'
+  const event =
+    action === 'approve' ? 'approval.approved' : action === 'reject' ? 'approval.rejected' : 'approval.failed'
   await notify.emit(ctx, event, {
     docId: String(pick(instance, 'doc_id', 'docId') ?? ''),
     recipients: [{ userId: submitter }],

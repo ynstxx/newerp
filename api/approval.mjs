@@ -111,10 +111,13 @@ export async function decide(ctx) {
   })
   const inst = /** @type {any} */ (result).instance ?? result
   // 通过且还有下一级 → 通知下一级；结束 → 通知提交人
+  // failed = 审批过了但业务钩子落库失败（如领料库存不足），不能当「已通过」通知
   if (input.action === 'reject' || inst?.status === 'rejected') {
     await bridge.emitFinished(ctx, inst, 'reject').catch(() => {})
   } else if (inst?.status === 'pending') {
     await bridge.emitPending(ctx, inst).catch(() => {})
+  } else if (inst?.status === 'failed') {
+    await bridge.emitFinished(ctx, inst, 'failed').catch(() => {})
   } else {
     await bridge.emitFinished(ctx, inst, 'approve').catch(() => {})
   }
