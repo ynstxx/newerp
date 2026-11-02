@@ -1,4 +1,518 @@
 {
+  "org_dept": {
+    "name": "org_dept",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "parent_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "path",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "manager_user_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "parent_id"
+      ],
+      [
+        "tenant_id",
+        "manager_user_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "parent_id"
+        ],
+        "ref": "org_dept",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "org_dept_member": {
+    "name": "org_dept_member",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "dept_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "user_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "dept_id",
+        "user_id"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "user_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "dept_id"
+        ],
+        "ref": "org_dept",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "approval_flow": {
+    "name": "approval_flow",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "doc_type",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "enabled",
+        "t": "bool",
+        "notNull": true,
+        "default": "true"
+      },
+      {
+        "n": "steps",
+        "t": "json",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "doc_type",
+        "enabled"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": []
+  },
+  "approval_instance": {
+    "name": "approval_instance",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "flow_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "doc_type",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "doc_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "current_step",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "amount",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "flow_snapshot",
+        "t": "json",
+        "notNull": true
+      },
+      {
+        "n": "submitter_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "submitted_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "finished_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "doc_type",
+        "doc_id"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ],
+      [
+        "tenant_id",
+        "submitter_id"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "flow_id"
+        ],
+        "ref": "approval_flow",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "approval_task": {
+    "name": "approval_task",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "instance_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "step_no",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "approver_user_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "acted_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "comment",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "remind_count",
+        "t": "int",
+        "notNull": true,
+        "default": "0"
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "instance_id",
+        "step_no",
+        "approver_user_id"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "approver_user_id",
+        "status"
+      ],
+      [
+        "tenant_id",
+        "instance_id",
+        "step_no"
+      ],
+      [
+        "tenant_id",
+        "status"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "instance_id"
+        ],
+        "ref": "approval_instance",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "approval_event": {
+    "name": "approval_event",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "instance_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "actor_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "action",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "comment",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "instance_id",
+        "at"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "instance_id"
+        ],
+        "ref": "approval_instance",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
   "integration_conn": {
     "name": "integration_conn",
     "tenant": true,
