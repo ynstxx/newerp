@@ -4,14 +4,13 @@
  *
  * - 渠道密钥后端只回 `config.configured:true`；PUT 是**合并**语义，
  *   所以编辑时密钥框留空 = 不修改（页面上明确写出来），非密钥字段置空 = 删掉该键。
- * - api.js 只有 get/post/patch/del，而渠道 / 模板更新是 PUT —— 这里补一个只服务本页的
- *   `putJson`（同一套 /t/{slug} 前缀与错误形状），避免为两个端点去改共享文件。
+ * - 渠道 / 模板更新是 PUT，走 api.js 的 api.put（主线已补）。
  * - 模板同一 code + channel 可分别维护 zh / en 两条，列表里用语言标签区分。
  */
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
-import { api, currentTenant, fieldErrors } from '../api.js'
+import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
 import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
@@ -74,26 +73,6 @@ const has = (perm) => {
 }
 const canConfig = computed(() => has('notify:config'))
 const msgOf = (err) => err?.details?.reason ?? fieldErrors(err)
-
-/** 只服务本页的 PUT：api.js 没有 put，渠道 / 模板更新端点又只收 PUT */
-async function putJson(path, body) {
-  const slug = currentTenant()
-  const res = await fetch(`${slug ? `/t/${slug}` : ''}${path}`, {
-    method: 'PUT',
-    credentials: 'same-origin',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
-  })
-  const data = await res.json().catch(() => null)
-  if (!res.ok) {
-    const err = new Error(data?.error?.message ?? res.statusText)
-    err.status = res.status
-    err.code = data?.error?.code
-    err.details = data?.error?.details
-    throw err
-  }
-  return data
-}
 
 const chLabel = (type) => t(`f1.notify.chType.${type}`)
 const langLabel = (lang) => t(`f1.notify.langName.${lang}`)
@@ -218,7 +197,7 @@ async function saveChannel() {
   chBusy.value = true
   try {
     if (chEditing.value) {
-      await putJson(`/api/notify/channels/${chEditing.value.id}`, {
+      await api.put(`/api/notify/channels/${chEditing.value.id}`, {
         enabled: chForm.enabled,
         config: configPayload(),
         version: chEditing.value.version,
@@ -243,7 +222,7 @@ async function saveChannel() {
 
 async function toggleChannel(row, enabled) {
   try {
-    const updated = await putJson(`/api/notify/channels/${row.id}`, { enabled, version: row.version })
+    const updated = await api.put(`/api/notify/channels/${row.id}`, { enabled, version: row.version })
     Object.assign(row, updated)
     ElMessage.success(t('action.saved'))
   } catch (err) {
@@ -280,7 +259,7 @@ async function saveTemplate() {
   tplBusy.value = true
   try {
     if (tplEditing.value) {
-      await putJson(`/api/notify/templates/${tplEditing.value.id}`, {
+      await api.put(`/api/notify/templates/${tplEditing.value.id}`, {
         lang: tplForm.lang,
         subject: tplForm.subject || '',
         body: tplForm.body,

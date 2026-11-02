@@ -42,6 +42,8 @@ export const api = {
   post: (path, body, opts) => request('POST', path, body ?? {}, opts),
   /** @param {string} path @param {unknown} body */
   patch: (path, body) => request('PATCH', path, body),
+  /** @param {string} path @param {unknown} body */
+  put: (path, body) => request('PUT', path, body),
   /** @param {string} path */
   del: (path) => request('DELETE', path),
 }
