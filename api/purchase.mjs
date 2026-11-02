@@ -19,7 +19,8 @@ const PO_FIELDS = ['projectId', 'partyId', 'code', 'note', 'lines']
 const PO_SPEC = {
   projectId: { type: 'string', max: 64 },
   partyId: { type: 'string', required: true, max: 64 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   note: { type: 'string', max: 500 },
 }
 
@@ -133,7 +134,8 @@ const SUB_FIELDS = ['projectId', 'partyId', 'code', 'name', 'amount', 'note']
 const SUB_SPEC = {
   projectId: { type: 'string', required: true, max: 64 },
   partyId: { type: 'string', required: true, max: 64 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   name: { type: 'string', required: true, max: 64 },
   note: { type: 'string', max: 500 },
 }
@@ -229,7 +231,8 @@ const INVOICE_FIELDS = [
 const INVOICE_SPEC = {
   kind: { type: 'enum', values: svc.INVOICE_KINDS, required: true },
   partyId: { type: 'string', required: true, max: 64 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   projectId: { type: 'string', max: 64 },
   contractId: { type: 'string', max: 64 },
   poId: { type: 'string', max: 64 },

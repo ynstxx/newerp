@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/ticket.mjs'
 import { allowedNext, assertTransition } from './transition.mjs'
@@ -139,15 +140,10 @@ export async function createTicket(ctx, input) {
   const partyId = assertId(input.partyId ?? contract?.party_id ?? '')
   if (!(await store.partyById(ctx, partyId))) throw new HttpError(errors.notFound)
 
-  let code = input.code ? normCode(input.code) : ''
-  if (code) {
-    if (await store.byCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `工单编号 ${code} 已存在` })
-  } else {
-    for (let i = 0; i < 5 && !code; i++) {
-      const candidate = `T-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`
-      if (!(await store.byCode(ctx, candidate))) code = candidate
-    }
-    if (!code) throw new HttpError(errors.conflict, { reason: '工单编号生成冲突，请重试' })
+  // 不填就自动生成 TK-YYYY-0001（走统一的编号序列，不再用随机串）
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.ticket)
+  if (await store.byCode(ctx, code)) {
+    throw new HttpError(errors.conflict, { reason: `工单编号 ${code} 已存在` })
   }
 
   const reportedAt = input.reportedAt ?? new Date()

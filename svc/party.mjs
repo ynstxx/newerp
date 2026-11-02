@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/party.mjs'
 
@@ -58,7 +59,9 @@ export async function getParty(ctx, id) {
  * @param {{ code: string, name: string, partyType: string, status?: string, taxNo?: string, contactName?: string, phone?: string, email?: string, addr?: string, remark?: string }} input
  */
 export async function createParty(ctx, input) {
-  const code = normCode(input.code)
+  const prefix =
+    input.partyType === 'customer' ? PREFIX.partyCustomer : input.partyType === 'supplier' ? PREFIX.partySupplier : PREFIX.partyBoth
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, prefix)
   if (await store.byCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `编码 ${code} 已存在` })
   }

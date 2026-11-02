@@ -114,7 +114,7 @@ async function save() {
     ElMessage.warning(t('f2.changes.amountHint'))
     return
   }
-  if (!editing.value && (!form.projectId || !form.code.trim() || !form.title.trim())) {
+  if (!editing.value && (!form.projectId || !form.title.trim())) {
     ElMessage.warning(t('common.required'))
     return
   }
@@ -134,7 +134,7 @@ async function save() {
     } else {
       await api.post('/api/change-orders', {
         projectId: form.projectId,
-        code: form.code.trim(),
+        ...(form.code.trim() ? { code: form.code.trim() } : {}),
         title: form.title.trim(),
         amount: Number(form.amount),
         reason: form.reason || null,
@@ -306,7 +306,7 @@ onMounted(() => {
         </el-select>
       </el-form-item>
       <el-form-item :label="t('f2.changes.code')" :required="!editing">
-        <el-input v-model="form.code" maxlength="64" :disabled="Boolean(editing)" data-test="f-code" />
+        <el-input v-model="form.code" maxlength="64" :disabled="Boolean(editing)" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f2.changes.title')" required>
         <el-input v-model="form.title" maxlength="64" data-test="f-title" />

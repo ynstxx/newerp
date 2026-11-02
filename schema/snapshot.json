@@ -772,6 +772,55 @@
       }
     ]
   },
+  "code_seq": {
+    "name": "code_seq",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "prefix",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "period",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "n",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "prefix",
+        "period"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
   "integration_conn": {
     "name": "integration_conn",
     "tenant": true,

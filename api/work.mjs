@@ -22,7 +22,8 @@ const PLAN_FIELDS = ['projectId', 'code', 'name', 'planStart', 'planEnd', 'note'
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const PLAN_SPEC = {
   projectId: { type: 'string', required: true, max: 36 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   name: { type: 'string', required: true, max: 64 },
   planStart: { type: 'string', max: 40 },
   planEnd: { type: 'string', max: 40 },
@@ -41,7 +42,8 @@ const TASK_FIELDS = ['planId', 'code', 'title', 'assigneeId', 'planStart', 'plan
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const TASK_SPEC = {
   planId: { type: 'string', required: true, max: 36 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   title: { type: 'string', required: true, max: 64 },
   assigneeId: { type: 'string', max: 36 },
   planStart: { type: 'string', max: 40 },
@@ -70,7 +72,8 @@ const ISSUE_FIELDS = ['projectId', 'code', 'warehouseId', 'amount', 'note', 'lin
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const ISSUE_SPEC = {
   projectId: { type: 'string', required: true, max: 36 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   warehouseId: { type: 'string', required: true, max: 36 },
   note: { type: 'string', max: 500 },
 }
@@ -85,7 +88,8 @@ const CO_FIELDS = ['projectId', 'code', 'title', 'amount', 'reason']
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const CO_SPEC = {
   projectId: { type: 'string', required: true, max: 36 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   title: { type: 'string', required: true, max: 64 },
   reason: { type: 'string', max: 500 },
 }
@@ -100,7 +104,8 @@ const ACC_FIELDS = ['projectId', 'code', 'type', 'items', 'conclusion']
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const ACC_SPEC = {
   projectId: { type: 'string', required: true, max: 36 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   type: { type: 'enum', values: [...acceptance.ACCEPTANCE_TYPES], required: true },
   conclusion: { type: 'string', max: 500 },
 }

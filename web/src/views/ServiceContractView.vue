@@ -120,12 +120,12 @@ function openEdit(row) {
 }
 
 async function save() {
-  if (!form.code.trim() || !form.name.trim() || !form.partyId) {
+  if (!form.name.trim() || !form.partyId) {
     ElMessage.warning(t('f4.svc.required'))
     return
   }
   const body = {
-    code: form.code.trim(),
+    ...(form.code.trim() ? { code: form.code.trim() } : {}),
     name: form.name.trim(),
     partyId: form.partyId,
     startAt: form.startAt || null,
@@ -301,7 +301,7 @@ onMounted(() => {
   >
     <el-form label-position="top">
       <el-form-item :label="t('f4.svc.code')" required>
-        <el-input v-model="form.code" maxlength="64" data-test="f-code" />
+        <el-input v-model="form.code" maxlength="64" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f4.svc.name')" required>
         <el-input v-model="form.name" maxlength="64" data-test="f-name" />

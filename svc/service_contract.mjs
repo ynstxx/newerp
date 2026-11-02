@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/service_contract.mjs'
 
@@ -62,7 +63,7 @@ export async function getContract(ctx, id) {
 export async function createContract(ctx, input) {
   const partyId = assertId(input.partyId)
   if (!(await store.partyById(ctx, partyId))) throw new HttpError(errors.notFound)
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.serviceContract)
   if (await store.byCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `服务合同编号 ${code} 已存在` })
   }

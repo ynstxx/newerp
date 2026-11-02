@@ -4,6 +4,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { centsOf, moneyOf } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as approvalStore from '../store/approval.mjs'
 import * as audit from '../store/audit.mjs'
 import * as projectStore from '../store/project.mjs'
@@ -92,7 +93,7 @@ export async function getChangeOrder(ctx, id) {
  */
 export async function createChangeOrder(ctx, input) {
   const project = await mustProject(ctx, input.projectId)
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.changeOrder)
   if (await store.coByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `变更单号 ${code} 已存在` })
   const amountCents = centsOf(input.amount)
   if (amountCents === 0) throw new HttpError(errors.badRequest, { fields: { amount: 'non_zero' } })

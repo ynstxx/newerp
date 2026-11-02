@@ -125,7 +125,7 @@ function removeLine(index) {
 
 async function save() {
   const lines = form.lines.filter((l) => l.itemId && Number(l.qty) > 0)
-  if (!form.partyId || !form.code.trim() || !lines.length) {
+  if (!form.partyId || !lines.length) {
     ElMessage.warning(t('common.required'))
     return
   }
@@ -134,7 +134,7 @@ async function save() {
     await api.post('/api/purchase-orders', {
       partyId: form.partyId,
       projectId: form.projectId || null,
-      code: form.code.trim(),
+      ...(form.code.trim() ? { code: form.code.trim() } : {}),
       note: form.note || null,
       lines: lines.map((l) => ({ itemId: l.itemId, qty: Number(l.qty), price: Number(l.price) || 0 })),
     })
@@ -302,7 +302,7 @@ onMounted(() => {
         </el-select>
       </el-form-item>
       <el-form-item :label="t('f3.po.code')" required>
-        <el-input v-model="form.code" maxlength="64" data-test="po-code" />
+        <el-input v-model="form.code" maxlength="64" data-test="po-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f3.po.note')">
         <el-input v-model="form.note" type="textarea" :rows="2" maxlength="500" />

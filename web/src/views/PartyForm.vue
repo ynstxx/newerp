@@ -58,7 +58,7 @@ async function save() {
   <el-drawer v-model="visible" :title="props.party ? t('party.edit') : t('party.new')" size="420px" data-test="party-drawer">
     <el-form label-position="top">
       <el-form-item :label="t('party.code')" required>
-        <el-input v-model="form.code" maxlength="64" data-test="f-code" />
+        <el-input v-model="form.code" maxlength="64" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('party.name')" required>
         <el-input v-model="form.name" maxlength="64" data-test="f-name" />

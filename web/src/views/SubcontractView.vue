@@ -108,7 +108,7 @@ function openNew() {
 }
 
 async function save() {
-  if (!form.projectId || !form.partyId || !form.code.trim() || !form.name.trim() || !(Number(form.amount) > 0)) {
+  if (!form.projectId || !form.partyId || !form.name.trim() || !(Number(form.amount) > 0)) {
     ElMessage.warning(t('common.required'))
     return
   }
@@ -117,7 +117,7 @@ async function save() {
     await api.post('/api/subcontracts', {
       projectId: form.projectId,
       partyId: form.partyId,
-      code: form.code.trim(),
+      ...(form.code.trim() ? { code: form.code.trim() } : {}),
       name: form.name.trim(),
       amount: Number(form.amount),
       note: form.note || null,
@@ -320,7 +320,7 @@ onMounted(() => {
         </el-select>
       </el-form-item>
       <el-form-item :label="t('f3.sub.code')" required>
-        <el-input v-model="form.code" maxlength="64" />
+        <el-input v-model="form.code" maxlength="64"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f3.sub.name')" required>
         <el-input v-model="form.name" maxlength="64" />

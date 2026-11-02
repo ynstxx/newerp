@@ -4,6 +4,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { centsOf, moneyOf } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as membership from '../store/membership.mjs'
 import * as projectStore from '../store/project.mjs'
@@ -149,7 +150,7 @@ export async function getPlan(ctx, id) {
 /** @param {any} ctx @param {{ projectId: string, code: string, name: string, planStart?: unknown, planEnd?: unknown, note?: string }} input */
 export async function createPlan(ctx, input) {
   const project = await mustProject(ctx, input.projectId)
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.workPlan)
   if (await store.planByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `计划编码 ${code} 已存在` })
   const now = new Date()
   const row = {
@@ -247,7 +248,7 @@ export async function getTask(ctx, id) {
 export async function createTask(ctx, input) {
   const plan = await store.planById(ctx, assertId(input.planId))
   if (!plan) throw new HttpError(errors.notFound)
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.workTask)
   if (await store.taskByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `任务编码 ${code} 已存在` })
   const assigneeId = uuidOrNull(input.assigneeId, 'assigneeId')
   if (assigneeId && !(await membership.memberExists(ctx, assigneeId))) {

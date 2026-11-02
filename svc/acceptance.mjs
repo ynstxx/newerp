@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/work.mjs'
 import { advanceProject } from './project.mjs'
@@ -105,7 +106,7 @@ export async function getAcceptance(ctx, id) {
  */
 export async function createAcceptance(ctx, input) {
   const project = await mustProject(ctx, input.projectId)
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.acceptance)
   if (await store.accByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `验收单号 ${code} 已存在` })
   if (!ACCEPTANCE_TYPES.includes(/** @type {any} */ (input.type))) {
     throw new HttpError(errors.badRequest, { fields: { type: `enum:${ACCEPTANCE_TYPES.join('|')}` } })

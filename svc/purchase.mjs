@@ -4,6 +4,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { centsOf, moneyOf, mulCents } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/purchase.mjs'
 import * as hooks from './approval_hooks.mjs'
@@ -389,7 +390,7 @@ function normPoLines(/** @type {unknown} */ raw) {
  * @param {{ projectId?: string, partyId: string, code: string, note?: string, lines: unknown }} input
  */
 export async function createPo(ctx, input) {
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.purchaseOrder)
   if (await store.poByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `采购单号 ${code} 已存在` })
   const partyId = assertId(input.partyId)
   if (!(await store.partyExists(ctx, partyId))) {
@@ -578,7 +579,7 @@ export async function createReceipt(ctx, input) {
   const now = new Date()
   const receivedAt = dateOf(input.receivedAt, 'receivedAt') ?? now
   const id = randomUUID()
-  const code = input.code ? normCode(input.code) : `GRN-${id.slice(0, 8).toUpperCase()}`
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.goodsReceipt)
 
   await withTx(ctx, async (tx) => {
     const po = await store.lockPo(tx, poId)
@@ -714,7 +715,7 @@ export async function getReceipt(ctx, id) {
  * @param {{ projectId: string, partyId: string, code: string, name: string, amount: unknown, note?: string }} input
  */
 export async function createSubcontract(ctx, input) {
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.subcontract)
   if (await store.subByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `分包合同号 ${code} 已存在` })
   const projectId = assertId(input.projectId)
   if (!(await store.projectExists(ctx, projectId))) {
@@ -1010,7 +1011,7 @@ export async function createInvoice(ctx, input) {
   if (!INVOICE_KINDS.includes(kind)) {
     throw new HttpError(errors.badRequest, { fields: { kind: `enum:${INVOICE_KINDS.join('|')}` } })
   }
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.invoice)
   if (await store.invoiceByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `发票号 ${code} 已存在` })
   const partyId = assertId(input.partyId)
   if (!(await store.partyExists(ctx, partyId))) {

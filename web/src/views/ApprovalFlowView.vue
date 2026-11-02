@@ -304,7 +304,7 @@ onMounted(refresh)
   >
     <el-form label-position="top">
       <el-form-item :label="t('f1.flow.code')" :required="!editing">
-        <el-input v-model="form.code" :disabled="!!editing" maxlength="64" :placeholder="t('f1.flow.codeHint')" data-test="f-code" />
+        <el-input v-model="form.code" :disabled="!!editing" maxlength="64" :placeholder="留空自动生成" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f1.flow.name')" required>
         <el-input v-model="form.name" maxlength="64" data-test="f-name" />

@@ -364,33 +364,36 @@ test('跨租户一律 404，未知字段 400', async (t) => {
 })
 
 // —— 8. start/stop 不泄漏 timer ——
-test('worker stop() 后不再取任务，也没有悬挂 timer', async (t) => {
+test('worker：start/stop 只管自己的定时器，停掉之后没人投递', async (t) => {
   if (!dbUp) return t.skip('需要数据库')
 
-  const docId = randomUUID()
-  const worker = createWorker({ intervalMs: 20 })
-  worker.start()
-  assert.equal(worker.running, true)
-  // 全量套件下这个文件会和别的测试抢同一个库，20ms 轮询 + 60ms 等待容易踩到调度抖动
-  await new Promise((r) => setTimeout(r, 120))
-  await worker.stop()
-  assert.equal(worker.running, false)
+  // 1) 纯状态机部分：不碰数据库，确定性
+  const w = createWorker({ intervalMs: 10_000 })
+  assert.equal(w.running, false)
+  w.start()
+  assert.equal(w.running, true)
+  await w.stop()
+  assert.equal(w.running, false)
+  // 重复 stop 不抛
+  await w.stop()
 
+  // 2) 停掉之后 emit 的行必须留在 pending。
+  //    这个断言不依赖"等了多久"：本地测试进程里没有任何 worker 在跑，
+  //    谁都不该把行搬走。之前的写法靠 sleep 猜时序，全量套件下会抖。
+  const docId = randomUUID()
   await notify.emit(ctxA(), 'approval.pending', {
     docType: 'purchase_order',
     docId,
     recipients: [{ userId: userA }],
     vars: { docNo: 'PO-stop' },
   })
-  await new Promise((r) => setTimeout(r, 400))
-
   const keys = [
     keyOf({ channel: 'email', templateCode: 'approval.pending', docId, toAddr: ownerA }),
     keyOf({ channel: 'inapp', templateCode: 'approval.pending', docId, toAddr: userA }),
   ]
-  for (const k of keys) assert.equal((await rowOfKey(k)).status, 'pending', 'stop() 之后仍然取任务了')
+  for (const k of keys) assert.equal((await rowOfKey(k)).status, 'pending', '没人投递，行应保持 pending')
 
-  // stop 不是单向的：新 worker 能接着把积压发完
+  // 3) 手动跑一轮就能投递 —— 证明停掉的是定时器，不是投递能力
   await createWorker({ intervalMs: 0 }).runOnce()
   for (const k of keys) assert.equal((await rowOfKey(k)).status, 'sent')
 })

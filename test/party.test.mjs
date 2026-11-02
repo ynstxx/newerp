@@ -148,9 +148,10 @@ test('编码重复 409；未知字段 400；类型非法 400', async (t) => {
   assert.equal(badEmail.status, 400)
   assert.equal((await jsonOf(badEmail)).error.details.fields.email, 'email')
 
-  const missing = await call('POST', `/t/${slugA}/api/parties`, { name: '无编码' })
-  assert.equal(missing.status, 400)
-  assert.equal((await jsonOf(missing)).error.details.fields.code, 'required')
+  // 编码现在可选：不填就自动生成，不该再报 required
+  const auto = await call('POST', `/t/${slugA}/api/parties`, { name: '无编码', partyType: 'customer' })
+  assert.equal(auto.status, 201)
+  assert.match((await jsonOf(auto)).code, /^CUS-\d{4}-\d{4}$/)
 })
 
 test('PATCH：部分更新，version 自增；旧 version 409', async (t) => {

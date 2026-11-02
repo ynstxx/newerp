@@ -9,7 +9,8 @@ import * as stock from '../svc/stock.mjs'
 const ITEM_FIELDS = ['code', 'name', 'spec', 'category', 'baseUom', 'status', 'version', 'uoms']
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const ITEM_SPEC = {
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   name: { type: 'string', required: true, max: 64 },
   spec: { type: 'string', max: 64 },
   category: { type: 'code', max: 64 },
@@ -22,7 +23,8 @@ const ITEM_SPEC = {
 const WH_FIELDS = ['code', 'name', 'status', 'version']
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const WH_SPEC = {
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   name: { type: 'string', required: true, max: 64 },
   status: { type: 'enum', values: items.WAREHOUSE_STATUSES },
   version: { type: 'int' },

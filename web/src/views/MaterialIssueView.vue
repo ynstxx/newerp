@@ -171,7 +171,7 @@ function removeLine(index) {
 }
 
 async function save() {
-  if (!form.projectId || !form.code.trim() || !form.warehouseId) {
+  if (!form.projectId || !form.warehouseId) {
     ElMessage.warning(t('common.required'))
     return
   }
@@ -199,7 +199,7 @@ async function save() {
     } else {
       await api.post('/api/material-issues', {
         projectId: form.projectId,
-        code: form.code.trim(),
+        ...(form.code.trim() ? { code: form.code.trim() } : {}),
         warehouseId: form.warehouseId,
         note: form.note || null,
         lines,
@@ -377,7 +377,7 @@ onMounted(() => {
         </el-select>
       </el-form-item>
       <el-form-item :label="t('f2.issues.code')" required>
-        <el-input v-model="form.code" maxlength="64" :disabled="Boolean(editing)" data-test="f-code" />
+        <el-input v-model="form.code" maxlength="64" :disabled="Boolean(editing)" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f2.warehouse')" required>
         <el-select

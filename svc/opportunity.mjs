@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as membership from '../store/membership.mjs'
 import * as store from '../store/opportunity.mjs'
@@ -98,7 +99,7 @@ async function assertOwner(ctx, ownerId) {
  * @param {{ code: string, name: string, partyId: string, ownerId?: string | null, estAmount: string, expectedSignAt?: string | null, note?: string | null }} input
  */
 export async function createOpportunity(ctx, input) {
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.opportunity)
   if (await store.byCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `商机编码 ${code} 已存在` })
   }

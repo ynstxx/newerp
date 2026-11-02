@@ -12,7 +12,8 @@ const TERM_FIELDS = ['seq', 'title', 'content']
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const SPEC = {
   quotationId: { type: 'string', required: true, max: 36 },
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   name: { type: 'string', required: true, max: 64 },
   signAt: { type: 'string', max: 40 },
   note: { type: 'string', max: 500 },

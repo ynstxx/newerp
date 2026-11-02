@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import { assertTransition, allowedNext } from './transition.mjs'
 import { PROJECT_TRANSITIONS } from './project.mjs'
 import * as audit from '../store/audit.mjs'
@@ -90,7 +91,7 @@ export async function createContract(ctx, input) {
       allowed: ['accepted'],
     })
   }
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.contract)
   if (await store.byCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `合同编号 ${code} 已存在` })
   }

@@ -13,7 +13,8 @@ const FLOW_FIELDS = ['code', 'name', 'docType', 'enabled', 'steps']
 
 /** @type {Record<string, import('../http/validate.mjs').Field>} */
 const FLOW_SPEC = {
-  code: { type: 'code', required: true, max: 64 },
+  // 留空自动生成：PREFIX-YYYY-0001
+  code: { type: 'code', max: 64 },
   name: { type: 'string', required: true, max: 64 },
   docType: { type: 'code', required: true, max: 64 },
   enabled: { type: 'bool' },

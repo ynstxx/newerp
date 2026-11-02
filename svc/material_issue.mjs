@@ -4,6 +4,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { centsOf, lineAmountCents, moneyOf } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as approvalStore from '../store/approval.mjs'
 import * as itemStore from '../store/item.mjs'
@@ -155,7 +156,7 @@ export async function createMaterialIssue(ctx, input) {
   const project = await mustProject(ctx, input.projectId)
   const warehouseId = assertId(input.warehouseId)
   if (!(await itemStore.warehouseById(ctx, warehouseId))) throw new HttpError(errors.notFound)
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.materialIssue)
   if (await store.issueByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `领料单号 ${code} 已存在` })
   const lines = await linesOf(ctx, input.lines)
   let amount

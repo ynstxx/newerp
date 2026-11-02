@@ -279,7 +279,7 @@ onMounted(() => {
         <div v-if="!warehouses.length" class="erp-weak">{{ t('f3.grn.noWarehouse') }}</div>
       </el-form-item>
       <el-form-item :label="t('f3.grn.code')">
-        <el-input v-model="form.code" maxlength="64" :placeholder="t('f3.grn.autoCode')" />
+        <el-input v-model="form.code" maxlength="64" :placeholder="留空自动生成"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f3.grn.receivedAt')">
         <el-date-picker v-model="form.receivedAt" type="date" value-format="YYYY-MM-DD" style="width: 100%" />

@@ -105,7 +105,7 @@ function openEdit(row) {
 }
 
 async function save() {
-  if (!editing.value && (!form.projectId || !form.code.trim() || !form.name.trim())) {
+  if (!editing.value && (!form.projectId || !form.name.trim())) {
     ElMessage.warning(t('common.required'))
     return
   }
@@ -126,7 +126,7 @@ async function save() {
     } else {
       await api.post('/api/work-plans', {
         projectId: form.projectId,
-        code: form.code.trim(),
+        ...(form.code.trim() ? { code: form.code.trim() } : {}),
         name: form.name.trim(),
         planStart: form.planStart || null,
         planEnd: form.planEnd || null,
@@ -385,7 +385,7 @@ onMounted(() => {
         </el-select>
       </el-form-item>
       <el-form-item :label="t('f2.plans.code')" :required="!editing">
-        <el-input v-model="form.code" maxlength="64" :disabled="Boolean(editing)" data-test="f-code" />
+        <el-input v-model="form.code" maxlength="64" :disabled="Boolean(editing)" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('f2.plans.name')" required>
         <el-input v-model="form.name" maxlength="64" data-test="f-name" />

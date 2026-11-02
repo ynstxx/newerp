@@ -5,6 +5,7 @@ import { centsOf, moneyOf } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
 import * as approvalEvents from './approval_events.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/approval.mjs'
 import * as org from '../store/approval_org.mjs'
@@ -227,7 +228,7 @@ export async function listFlows(ctx, page, filters) {
  * @param {{ code: string, name: string, docType: string, enabled?: boolean, steps: unknown }} input
  */
 export async function createFlow(ctx, input) {
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.approvalFlow)
   const docType = normCode(input.docType)
   const steps = normSteps(input.steps)
   if (await store.flowByCode(ctx, code)) throw new HttpError(errors.conflict, { reason: `流程编码 ${code} 已存在` })

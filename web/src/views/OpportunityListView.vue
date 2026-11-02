@@ -97,14 +97,14 @@ function openEdit(row) {
 }
 
 async function save() {
-  if (!form.code.trim() || !form.name.trim() || !form.partyId || form.estAmount === '') {
+  if (!form.name.trim() || !form.partyId || form.estAmount === '') {
     ElMessage.warning(t('common.required'))
     return
   }
   busy.value = true
   try {
     const payload = {
-      code: form.code.trim(),
+      ...(form.code.trim() ? { code: form.code.trim() } : {}),
       name: form.name.trim(),
       partyId: form.partyId,
       estAmount: Number(form.estAmount),
@@ -254,7 +254,7 @@ onMounted(() => {
   <el-drawer v-model="drawer" :title="editing ? t('oppty.edit') : t('oppty.new')" size="440px" data-test="oppty-drawer">
     <el-form label-position="top">
       <el-form-item :label="t('oppty.code')" required>
-        <el-input v-model="form.code" maxlength="64" data-test="f-code" />
+        <el-input v-model="form.code" maxlength="64" data-test="f-code"  placeholder="留空自动生成"/>
       </el-form-item>
       <el-form-item :label="t('oppty.name')" required>
         <el-input v-model="form.name" maxlength="64" data-test="f-name" />

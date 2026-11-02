@@ -4,6 +4,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { centsOf, moneyOf } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/item.mjs'
 
@@ -131,7 +132,7 @@ function uomsOf(/** @type {unknown} */ raw) {
  * @param {{ code: string, name: string, spec?: string, category?: string, baseUom: string, status?: string, uoms?: unknown }} input
  */
 export async function createItem(ctx, input) {
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.item)
   if (await store.itemByCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `编码 ${code} 已存在` })
   }
@@ -264,7 +265,7 @@ export async function getWarehouse(ctx, id) {
  * @param {{ code: string, name: string, status?: string }} input
  */
 export async function createWarehouse(ctx, input) {
-  const code = normCode(input.code)
+  const code = input.code ? normCode(input.code) : await nextCode(ctx, PREFIX.warehouse)
   if (await store.warehouseByCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `编码 ${code} 已存在` })
   }
