@@ -3,6 +3,7 @@ import { readJson, only } from '../http/body.mjs'
 import { sendJson } from '../http/context.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { parsePage } from '../http/page.mjs'
+import { centsOf, moneyOf } from '../http/money.mjs'
 import { validate } from '../http/validate.mjs'
 import * as svc from '../svc/opportunity.mjs'
 
@@ -26,15 +27,14 @@ const SPEC = {
  * @param {string} field
  * @param {boolean} [required]
  */
-function moneyOf(v, field, required = false) {
+function positiveMoney(v, field, required = false) {
   if (v === undefined || v === null || v === '') {
     if (required) throw new HttpError(errors.badRequest, { fields: { [field]: 'required' } })
     return undefined
   }
-  const n = typeof v === 'number' ? v : Number(String(v).trim())
-  if (!Number.isFinite(n)) throw new HttpError(errors.badRequest, { fields: { [field]: 'money' } })
-  if (n < 0) throw new HttpError(errors.badRequest, { fields: { [field]: 'min:0' } })
-  return n.toFixed(2)
+  const cents = centsOf(v, field)
+  if (cents < 0) throw new HttpError(errors.badRequest, { fields: { [field]: 'min:0' } })
+  return moneyOf(cents)
 }
 
 /** @type {import('../http/router.mjs').Handler} */
@@ -57,7 +57,7 @@ export async function create(ctx) {
   need(ctx, PERM.opportunityCreate)
   const body = only(await readJson(ctx), CREATE_FIELDS)
   const input = validate(body, SPEC)
-  input.estAmount = moneyOf(body.estAmount, 'estAmount', true)
+  input.estAmount = positiveMoney(body.estAmount, 'estAmount', true)
   sendJson(ctx.res, 201, await svc.createOpportunity(ctx, /** @type {any} */ (input)))
 }
 
@@ -66,7 +66,7 @@ export async function update(ctx) {
   need(ctx, PERM.opportunityUpdate)
   const body = only(await readJson(ctx), FIELDS)
   const patch = validate(body, SPEC, { partial: true })
-  if (body.estAmount !== undefined) patch.estAmount = moneyOf(body.estAmount, 'estAmount')
+  if (body.estAmount !== undefined) patch.estAmount = positiveMoney(body.estAmount, 'estAmount')
   sendJson(ctx.res, 200, await svc.updateOpportunity(ctx, ctx.params.id, patch))
 }
 

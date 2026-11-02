@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
+import { normCode } from '../http/validate.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/party.mjs'
 
@@ -57,14 +58,15 @@ export async function getParty(ctx, id) {
  * @param {{ code: string, name: string, partyType: string, status?: string, taxNo?: string, contactName?: string, phone?: string, email?: string, addr?: string, remark?: string }} input
  */
 export async function createParty(ctx, input) {
-  if (await store.byCode(ctx, input.code)) {
-    throw new HttpError(errors.conflict, { reason: `编码 ${input.code} 已存在` })
+  const code = normCode(input.code)
+  if (await store.byCode(ctx, code)) {
+    throw new HttpError(errors.conflict, { reason: `编码 ${code} 已存在` })
   }
   const now = new Date()
   const id = randomUUID()
   const row = {
     id,
-    code: input.code,
+    code,
     name: input.name,
     partyType: input.partyType,
     status: input.status ?? 'active',
@@ -106,7 +108,7 @@ export async function updateParty(ctx, id, patch) {
   if (patch.version !== undefined && patch.version !== cur.version) {
     throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
   }
-  const code = patch.code ?? cur.code
+  const code = patch.code !== undefined ? normCode(patch.code) : cur.code
   if (code !== cur.code && (await store.byCode(ctx, code))) {
     throw new HttpError(errors.conflict, { reason: `编码 ${code} 已存在` })
   }

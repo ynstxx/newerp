@@ -3,6 +3,7 @@ import { readJson, only } from '../http/body.mjs'
 import { sendJson } from '../http/context.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { parsePage } from '../http/page.mjs'
+import { centsOf, moneyOf } from '../http/money.mjs'
 import { validate } from '../http/validate.mjs'
 import * as svc from '../svc/design.mjs'
 
@@ -53,11 +54,9 @@ function optText(v, path, max) {
 
 /** @param {unknown} v @param {string} path */
 function money(v, path) {
-  const n = typeof v === 'string' ? Number(v) : v
-  if (typeof n !== 'number' || !Number.isFinite(n) || n < 0) {
-    throw new HttpError(errors.badRequest, { fields: { [path]: 'money' } })
-  }
-  return n
+  const cents = centsOf(v, path)
+  if (cents < 0) throw new HttpError(errors.badRequest, { fields: { [path]: 'min:0' } })
+  return moneyOf(cents)
 }
 
 /**

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
+import { normCode } from '../http/validate.mjs'
 import * as audit from '../store/audit.mjs'
 import * as membership from '../store/membership.mjs'
 import * as store from '../store/opportunity.mjs'
@@ -95,8 +96,9 @@ async function assertOwner(ctx, ownerId) {
  * @param {{ code: string, name: string, partyId: string, ownerId?: string | null, estAmount: string, expectedSignAt?: string | null, note?: string | null }} input
  */
 export async function createOpportunity(ctx, input) {
-  if (await store.byCode(ctx, input.code)) {
-    throw new HttpError(errors.conflict, { reason: `商机编码 ${input.code} 已存在` })
+  const code = normCode(input.code)
+  if (await store.byCode(ctx, code)) {
+    throw new HttpError(errors.conflict, { reason: `商机编码 ${code} 已存在` })
   }
   await assertParty(ctx, input.partyId)
 
@@ -107,7 +109,7 @@ export async function createOpportunity(ctx, input) {
   const id = randomUUID()
   const row = {
     id,
-    code: input.code,
+    code,
     name: input.name,
     partyId: input.partyId,
     ownerId,
@@ -151,7 +153,7 @@ export async function updateOpportunity(ctx, id, patch) {
   if (patch.version !== undefined && patch.version !== cur.version) {
     throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
   }
-  const code = patch.code ?? cur.code
+  const code = patch.code !== undefined ? normCode(patch.code) : cur.code
   if (code !== cur.code && (await store.byCode(ctx, code))) {
     throw new HttpError(errors.conflict, { reason: `商机编码 ${code} 已存在` })
   }

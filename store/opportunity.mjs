@@ -33,8 +33,8 @@ export function list(ctx, f) {
     conds.push(`stage = $${args.length}`)
   }
   if (f.keyword) {
-    args.push(`%${f.keyword}%`)
-    conds.push(`(name LIKE $${args.length} OR code LIKE $${args.length})`)
+    args.push(`%${f.keyword.toLowerCase()}%`)
+    conds.push(`(LOWER(name) LIKE $${args.length} OR LOWER(code) LIKE $${args.length})`)
   }
   const cur = cursorClause(f.cursor, args, f.order)
   if (cur.sql) conds.push(cur.sql.replace(/^ AND /, ''))

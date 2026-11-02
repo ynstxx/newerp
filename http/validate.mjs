@@ -12,6 +12,14 @@ import { HttpError, errors } from './errors.mjs'
 const CODE = /^[A-Za-z0-9_-]{1,64}$/
 
 /**
+ * 业务编码的唯一规范形式：全大写。
+ * 不归一的话，PG（COLLATE "C"，大小写敏感）会放 ABC 与 abc 共存，
+ * MySQL（utf8mb4_0900_ai_ci）会当重复 —— 同一个业务编码规则两库不等价。
+ * @param {unknown} s
+ */
+export const normCode = (s) => String(s ?? '').trim().toUpperCase()
+
+/**
  * 全部字段走白名单：spec 里没有的键直接丢掉（未知字段由 http/body.only 先挡）。
  * @param {Record<string, unknown>} body
  * @param {Record<string, Field>} spec

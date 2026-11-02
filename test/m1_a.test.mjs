@@ -118,7 +118,7 @@ test('商机 new→following→won：同事务生成 project(draft) 与第一条
   const won = await jsonOf(wonRes)
   assert.equal(won.stage, 'won')
   assert.equal(won.project.status, 'draft')
-  assert.equal(won.project.code, `P-O-${run}-1`)
+  assert.equal(won.project.code, `P-O-${run}-1`.toUpperCase())
   assert.equal(won.project.opportunityId, opp.id)
   assert.equal(won.project.partyId, partyA)
   assert.equal(Number(won.project.contractAmt), 0)
@@ -387,7 +387,7 @@ test('列表：游标分页翻完，stage/q 过滤生效', async (t) => {
   }
   assert.equal(new Set(seen).size, seen.length, '有重复项')
   assert.equal(seen.length, 3)
-  assert.ok(seen.every((/** @type {string} */ c) => c.startsWith(`P-L-${run}-`)))
+  assert.ok(seen.every((/** @type {string} */ c) => c.startsWith(`P-L-${run}-`.toUpperCase())))
 
   const wonOnly = await jsonOf(await call('GET', `/t/${slugA}/api/opportunities?stage=won&limit=100`))
   assert.ok(wonOnly.items.length >= 3)

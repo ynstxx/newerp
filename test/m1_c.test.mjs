@@ -5,6 +5,7 @@ import { connect, exec } from '../db/index.mjs'
 import { makeApp, jsonOf } from './helpers.mjs'
 import { register } from '../api/routes-c.mjs'
 import { createTenant } from '../svc/tenant.mjs'
+import * as money from '../http/money.mjs'
 import * as svc from '../svc/quotation.mjs'
 
 const password = 'test-pass-123'
@@ -123,11 +124,11 @@ const get = (path, cookie = cookieA) => app.call('GET', path, undefined, cookie)
 const cents = (/** @type {number} */ n) => Math.round(n * 100)
 
 test('金额：按分用整数算，四舍五入到 2 位', () => {
-  assert.equal(svc.moneyOf(svc.lineAmountCents('3', '1234.56')), '3703.68')
-  assert.equal(svc.moneyOf(svc.lineAmountCents('1', '0.005')), '0.01', '第三位小数 half-up')
-  assert.equal(svc.moneyOf(svc.centsOf(0.1 + 0.2)), '0.30', '不做浮点累加')
-  assert.equal(svc.moneyOf(svc.centsOf('100')), '100.00')
-  assert.equal(svc.centsOf('1234.56'), 123456)
+  assert.equal(money.moneyOf(money.lineAmountCents('3', '1234.56')), '3703.68')
+  assert.equal(money.moneyOf(money.lineAmountCents('1', '0.005')), '0.01', '第三位小数 half-up')
+  assert.equal(money.moneyOf(money.centsOf(0.1 + 0.2)), '0.30', '不做浮点累加')
+  assert.equal(money.moneyOf(money.centsOf('100')), '100.00')
+  assert.equal(money.centsOf('1234.56'), 123456)
 })
 
 test('从 confirmed 方案生成报价：行数与 BOM 一致，price 取 unit_cost，amount=qty*price，合计正确', async (t) => {
@@ -139,7 +140,7 @@ test('从 confirmed 方案生成报价：行数与 BOM 一致，price 取 unit_c
   const body = await jsonOf(res)
   assert.equal(body.status, 'draft')
   assert.equal(body.version, 1)
-  assert.equal(body.code, `Q-${designDocId.slice(0, 8)}-1`)
+  assert.equal(body.code, `Q-${designDocId.slice(0, 8)}-1`.toUpperCase())
   assert.equal(body.projectId, projectId)
   assert.equal(body.partyId, partyA, 'party_id 从 project 继承')
   assert.equal(body.lines.length, BOM.length, '行数与 BOM 一致')

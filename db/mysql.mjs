@@ -26,6 +26,9 @@ export async function createAdapter() {
     database: config.db.database,
     connectionLimit: 10,
     connectTimeout: 3000,
+    // 不设的话 mysql2 默认按 Node 进程本地时区把 Date 格式化成裸墙钟，
+    // 库里存的就不是 UTC（本机 +0800 会整体偏 8 小时，往返自洽所以测试看不出来）
+    timezone: 'Z',
     supportBigNumbers: true,
     bigNumberStrings: true,
     typeCast,

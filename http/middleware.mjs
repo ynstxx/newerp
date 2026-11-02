@@ -24,6 +24,25 @@ export function compose(mws) {
   }
 }
 
+/**
+ * 驱动错误码收敛：唯一键/外键冲突不该冒成 500。
+ * PG: 23505 唯一冲突 / 23503 外键不存在；MySQL: 1062 / 1452（以及 ER_* 码）。
+ * 并发撞唯一键（两个请求同时算出同一个 code 或版本号）时，用户该看到 409，不是"服务器繁忙"。
+ * @param {any} err
+ * @returns {any}
+ */
+function mapDriverError(err) {
+  const code = String(err?.code ?? '')
+  const errno = Number(err?.errno ?? 0)
+  if (code === '23505' || errno === 1062 || code === 'ER_DUP_ENTRY') {
+    return new HttpError(errors.conflict, { reason: '同一记录已存在（可能是并发提交），请重试' })
+  }
+  if (code === '23503' || errno === 1452 || code === 'ER_NO_REFERENCED_ROW_2') {
+    return new HttpError(errors.badRequest, { reason: '引用的记录不存在' })
+  }
+  return errors.internal
+}
+
 /** @type {Middleware} */
 export async function recover(ctx, next) {
   try {
@@ -31,7 +50,7 @@ export async function recover(ctx, next) {
   } catch (err) {
     if (!(err instanceof HttpError)) console.error(`[${ctx.requestId}] unhandled`, err)
     const e = /** @type {any} */ (err)
-    sendError(ctx.res, err instanceof HttpError ? e : errors.internal, ctx.requestId, e?.details)
+    sendError(ctx.res, err instanceof HttpError ? e : mapDriverError(e), ctx.requestId, e?.details)
   }
 }
 

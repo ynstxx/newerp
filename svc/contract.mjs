@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
+import { normCode } from '../http/validate.mjs'
 import { assertTransition, allowedNext } from './transition.mjs'
 import { PROJECT_TRANSITIONS } from './project.mjs'
 import * as audit from '../store/audit.mjs'
@@ -89,8 +90,9 @@ export async function createContract(ctx, input) {
       allowed: ['accepted'],
     })
   }
-  if (await store.byCode(ctx, input.code)) {
-    throw new HttpError(errors.conflict, { reason: `合同编号 ${input.code} 已存在` })
+  const code = normCode(input.code)
+  if (await store.byCode(ctx, code)) {
+    throw new HttpError(errors.conflict, { reason: `合同编号 ${code} 已存在` })
   }
 
   const lines = await store.quotationLinesOf(ctx, quotationId)
@@ -100,7 +102,7 @@ export async function createContract(ctx, input) {
     id,
     projectId: quotation.project_id,
     quotationId,
-    code: input.code,
+    code,
     name: input.name,
     partyId: quotation.party_id,
     amount: quotation.amount,

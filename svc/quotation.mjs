@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
+import { normCode } from '../http/validate.mjs'
+import { centsOf, lineAmountCents, moneyOf } from '../http/money.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/quotation.mjs'
 import { assertTransition } from './transition.mjs'
@@ -24,54 +26,6 @@ function assertId(/** @type {string} */ id) {
   return id
 }
 
-/**
- * 金额一律按"分"用整数算，绝不走浮点。输入可以是库里拿到的 "1234.56" 或 JSON 里的 1234.56。
- * 多于两位小数四舍五入（half-up）。
- * @param {unknown} v @returns {number} 整数分
- */
-export function centsOf(v) {
-  const s = typeof v === 'string' ? v.trim() : String(v ?? '')
-  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(s)
-  if (!m) throw new HttpError(errors.badRequest, { fields: { price: 'money' } })
-  const sign = m[1]
-  const int = /** @type {string} */ (m[2])
-  const frac = /** @type {string} */ (m[3] ?? '')
-  const padded = `${frac}000`.slice(0, 3)
-  let cents = BigInt(int) * 100n + BigInt(padded.slice(0, 2))
-  if (padded[2] >= '5') cents += 1n
-  return Number(sign ? -cents : cents)
-}
-
-/**
- * 整数分 → "1234.50"（给 numeric(18,2) 列的参数）
- * @param {number} cents
- */
-export function moneyOf(cents) {
-  const n = Math.trunc(cents)
-  const abs = Math.abs(n)
-  const s = `${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`
-  return n < 0 ? `-${s}` : s
-}
-
-/**
- * 分 × 分 → 分，乘积除以 100 后四舍五入（BigInt 中间态，不丢精度）
- * @param {number} a @param {number} b
- */
-export function mulCents(a, b) {
-  const neg = a < 0 !== b < 0
-  const p = BigInt(Math.abs(a)) * BigInt(Math.abs(b))
-  const rounded = (p + 50n) / 100n
-  const n = Number(rounded)
-  return neg ? -n : n
-}
-
-/**
- * qty × price → 行金额（分）。qty/price 都是库或 JSON 里的原值
- * @param {unknown} qty @param {unknown} price
- */
-export function lineAmountCents(qty, price) {
-  return mulCents(centsOf(qty), centsOf(price))
-}
 
 /** @param {any} r */
 export const toApi = (r) => ({
@@ -174,7 +128,7 @@ export async function createQuotation(ctx, input) {
 
   const found = await store.countByProject(ctx, project.id)
   const version = Number(found?.n ?? 0) + 1
-  const code = input.code ?? `Q-${doc.id.slice(0, 8)}-${version}`
+  const code = normCode(input.code ?? `Q-${doc.id.slice(0, 8)}-${version}`)
   if (await store.byCode(ctx, code)) {
     throw new HttpError(errors.conflict, { reason: `报价编码 ${code} 已存在` })
   }
@@ -240,7 +194,7 @@ export async function advanceQuotation(ctx, id, to) {
     id,
     from: cur.status,
     status: to,
-    sentAt: to === 'sent' ? now : cur.sent_at,
+    sentAt: to === 'sent' ? now : cur.sent_at ? new Date(cur.sent_at) : null,
     decidedAt: to === 'accepted' || to === 'rejected' ? now : cur.decided_at,
     now,
   }

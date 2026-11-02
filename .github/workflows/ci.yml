@@ -71,6 +71,8 @@ jobs:
     env:
       DB_DRIVER: mysql
       DB_PORT: '3306'
+      # 故意用非 UTC 时区：时间戳落库若按进程本地时区格式化，这里才会红
+      TZ: Asia/Shanghai
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
