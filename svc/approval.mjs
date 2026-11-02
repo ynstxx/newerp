@@ -18,9 +18,12 @@ import { allowedNext, assertTransition } from './transition.mjs'
 
 export const INSTANCE_TRANSITIONS = /** @type {const} */ ({
   pending: ['approved', 'rejected', 'withdrawn'],
+  // failed = 审批本已通过、但业务钩子落库失败（如领料出库库存不足）。
+  // 只有 decide() 的钩子异常路径会写它，普通状态机仍然不允许手工跳。
   approved: [],
   rejected: [],
   withdrawn: [],
+  failed: [],
 })
 
 export const TASK_TRANSITIONS = /** @type {const} */ ({
@@ -465,6 +468,21 @@ export async function submit(ctx, input) {
 }
 
 /**
+ * 钩子异常 → 人类可读原因（写进 approval_event.comment，前端事件流可见）
+ * @param {unknown} err
+ */
+function hookReason(err) {
+  const anyErr = /** @type {any} */ (err)
+  const base =
+    anyErr?.details && typeof anyErr.details.reason === 'string'
+      ? anyErr.details.reason
+      : err instanceof Error
+        ? err.message
+        : String(err)
+  return `业务落库失败：${base}`.slice(0, 1000)
+}
+
+/**
  * 取任务 + 实例 + 当前级定义，并做授权（跨租户 404 由 store 的 $t 保证，越权 403）
  * @param {any} ctx @param {string} taskId
  */
@@ -518,6 +536,9 @@ export async function decide(ctx, taskId, input) {
 
   const comment = input.comment ?? null
   const now = new Date()
+  /** 钩子异常先记下，等事务提交后再抛（事务里抛会回滚 failed 标记） */
+  /** @type {unknown} */
+  let hookError = null
   await withTx(ctx, async (tx) => {
     const n = await store.taskDecide(tx, {
       id: task.id,
@@ -548,7 +569,44 @@ export async function decide(ctx, taskId, input) {
       if (!done) throw new HttpError(errors.conflict, { reason: '审批单已被并发修改，请刷新' })
       await store.skipPendingInInstance(tx, inst.id, now)
       const row = await store.instanceById(tx, inst.id)
-      await hooks.run(to === 'approved' ? 'approve' : 'reject', tx, row)
+      try {
+        await hooks.run(to === 'approved' ? 'approve' : 'reject', tx, row)
+      } catch (err) {
+        // 业务钩子失败（领料库存不足等）：**不让整个事务回滚** —— 否则审批结果、业务单据的
+        // failed 标记、补偿流水全部丢失，错就真被吞了。先把审批单落 failed 并把原因写进
+        // approval_event，事务提交后再把原始错误抛给调用方。
+        hookError = err
+        const reason = hookReason(err)
+        const failed = await store.instanceFinish(tx, {
+          id: inst.id,
+          from: row.status,
+          to: 'failed',
+          expectedVersion: row.version,
+          now,
+        })
+        if (failed) {
+          await store.eventInsert(tx, {
+            id: randomUUID(),
+            instanceId: inst.id,
+            actorId: ctx.userId ?? null,
+            action: 'failed',
+            comment: reason,
+            now,
+          })
+          await audit.insert(tx, {
+            id: randomUUID(),
+            module: 'approval',
+            action: 'hook_failed',
+            whoId: ctx.userId ?? null,
+            refType: 'approval_instance',
+            refId: inst.id,
+            before: { status: row.status },
+            after: { status: 'failed', docType: inst.doc_type, docId: inst.doc_id, error: reason },
+            traceId: ctx.requestId ?? '',
+            at: now,
+          })
+        }
+      }
       return row
     }
 
@@ -594,6 +652,8 @@ export async function decide(ctx, taskId, input) {
       at: now,
     })
   })
+  // 业务落库失败：审批单已按 failed 提交，错误照样往外抛（不吞）
+  if (hookError) throw hookError
   return getInstance(ctx, inst.id)
 }
 
