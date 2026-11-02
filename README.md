@@ -12,7 +12,7 @@
 
 ## 状态
 
-M0 · S3 完成 —— HTTP 骨架 + 双库迁移（11 表）+ 认证/租户/权限
+M0 · S4 完成 —— 骨架 + 双库迁移（11 表）+ 认证/租户/权限 + 四模式注册
 
 ## 首次进入
 
@@ -21,6 +21,15 @@ node cmd/tenant.mjs create --slug demo --name "演示集成" --email boss@demo.c
 # 登录：POST /api/auth/login  {"email":"boss@demo.cn","password":"demo12345"}
 # 带 cookie 访问 /t/demo/api/me
 ```
+
+注册策略改配置不用重启（最长 30 秒生效）：
+
+```bash
+node cmd/settings.mjs list
+node cmd/settings.mjs set registration.mode open      # closed | invite | email | open
+node cmd/settings.mjs set registration.captcha math    # none | math
+node cmd/user.mjs pending                             # require_admin_approval=true 时
+node cmd/user.mjs approve someone@example.com
 
 ## 起本地环境
 

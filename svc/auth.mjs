@@ -23,11 +23,11 @@ export const publicUser = (u) => ({ id: u.id, email: u.email, displayName: u.dis
  */
 export async function login(ctx, userName, password) {
   const now = Date.now()
-  if ((await loginAttempts.countFailures(ctx, { ident: userName, since: new Date(now - IDENT_WINDOW_MS) })) >= IDENT_LIMIT) {
+  if ((await loginAttempts.count(ctx, { ident: userName, since: new Date(now - IDENT_WINDOW_MS), kind: 'password', onlyFailures: true })) >= IDENT_LIMIT) {
     throw new HttpError(errors.tooManyRequests, { reason: '账号失败次数过多' })
   }
   const ip = ctx.req.socket.remoteAddress ?? null
-  if (ip && (await loginAttempts.countFailures(ctx, { ip, since: new Date(now - IP_WINDOW_MS) })) >= IP_LIMIT) {
+  if (ip && (await loginAttempts.count(ctx, { ip, since: new Date(now - IP_WINDOW_MS), kind: 'password', onlyFailures: true })) >= IP_LIMIT) {
     throw new HttpError(errors.tooManyRequests, { reason: 'IP 失败次数过多' })
   }
 

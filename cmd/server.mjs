@@ -7,6 +7,7 @@ import { createContext } from '../http/context.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { health } from '../api/health.mjs'
 import { login, logout, me } from '../api/auth.mjs'
+import { createInvite, register, registerInfo } from '../api/registration.mjs'
 import * as session from '../auth/session.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
@@ -14,6 +15,9 @@ const router = createRouter()
 router.get('/healthz', health)
 router.post('/api/auth/login', login)
 router.post('/api/auth/logout', logout)
+router.get('/api/auth/register-info', registerInfo)
+router.post('/api/auth/register', register)
+router.post('/api/invites', createInvite)
 router.get('/api/me', me)
 
 /** @type {import('../http/middleware.mjs').Middleware} */

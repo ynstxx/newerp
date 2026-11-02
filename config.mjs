@@ -18,6 +18,8 @@ export const config = {
   host: process.env.HOST ?? '0.0.0.0',
   port: int(process.env.PORT, 8080),
   version: /** @type {string} */ (pkg.version),
+  /** 会话签名/人机校验/后续密钥加密共用；生产环境必须显式给 */
+  secret: process.env.APP_SECRET || 'dev-only-insecure-secret',
   db: {
     driver: /** @type {'pg' | 'mysql'} */ (driver),
     host: process.env.DB_HOST ?? '127.0.0.1',
