@@ -6,8 +6,12 @@
 /** @type {Record<string, ErrDef>} */
 export const errors = {
   badRequest: { code: 'bad_request', status: 400, zh: '请求无效', en: 'Bad request' },
+  unauthorized: { code: 'unauthorized', status: 401, zh: '请先登录', en: 'Unauthorized' },
+  forbidden: { code: 'forbidden', status: 403, zh: '无权限', en: 'Forbidden' },
   notFound: { code: 'not_found', status: 404, zh: '不存在', en: 'Not found' },
   methodNotAllowed: { code: 'method_not_allowed', status: 405, zh: '方法不允许', en: 'Method not allowed' },
+  conflict: { code: 'conflict', status: 409, zh: '已存在', en: 'Conflict' },
+  tooManyRequests: { code: 'too_many_requests', status: 429, zh: '尝试过于频繁，请稍后再试', en: 'Too many requests' },
   internal: { code: 'internal', status: 500, zh: '服务器繁忙', en: 'Internal error' },
 }
 

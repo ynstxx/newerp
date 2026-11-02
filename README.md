@@ -12,7 +12,15 @@
 
 ## 状态
 
-M0 · S2 完成 —— HTTP 骨架 + 双库适配 + 迁移生成器（11 表）
+M0 · S3 完成 —— HTTP 骨架 + 双库迁移（11 表）+ 认证/租户/权限
+
+## 首次进入
+
+```bash
+node cmd/tenant.mjs create --slug demo --name "演示集成" --email boss@demo.cn --password demo12345
+# 登录：POST /api/auth/login  {"email":"boss@demo.cn","password":"demo12345"}
+# 带 cookie 访问 /t/demo/api/me
+```
 
 ## 起本地环境
 
