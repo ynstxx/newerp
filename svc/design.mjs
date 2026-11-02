@@ -30,6 +30,7 @@ export const toApi = (r) => ({
   confirmedAt: r.confirmed_at,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  lockVersion: r.lock_version,
 })
 
 /** @param {any} r */
@@ -131,7 +132,7 @@ export async function createDesignDoc(ctx, input) {
  * 只有 draft 能改；带 bomLines 就是整批替换（删旧插新，同事务）。
  * @param {any} ctx
  * @param {string} id
- * @param {{ version?: number, content?: string, bomLines?: any[] }} patch
+ * @param {{ lockVersion?: number, content?: string, bomLines?: any[] }} patch
  */
 export async function updateDesignDoc(ctx, id, patch) {
   const cur = await store.byId(ctx, assertId(id))
@@ -139,8 +140,9 @@ export async function updateDesignDoc(ctx, id, patch) {
   if (cur.status !== 'draft') {
     throw new HttpError(errors.conflict, { reason: `方案已 ${cur.status}，只有 draft 可以修改`, allowed: [] })
   }
-  if (patch.version !== undefined && patch.version !== cur.version) {
-    throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
+  // 锁用 lockVersion（业务版号 version 改内容时不变）；客户端不带也能靠下面的原子兜底
+  if (patch.lockVersion !== undefined && patch.lockVersion !== cur.lock_version) {
+    throw new HttpError(errors.conflict, { reason: `内容已被他人修改（当前 lockVersion ${cur.lock_version}）` })
   }
 
   const now = new Date()
@@ -151,7 +153,7 @@ export async function updateDesignDoc(ctx, id, patch) {
     const n = await store.update(tx, {
       id,
       content,
-      expectedVersion: cur.version,
+      expectedLockVersion: cur.lock_version,
       status: 'draft',
       now,
     })

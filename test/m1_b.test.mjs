@@ -211,7 +211,7 @@ test('方案 PATCH：bomLines 是整批替换（删旧插新），content 一起
   const res = await app.call(
     'PATCH',
     `/t/${slugA}/api/design-docs/${doc.id}`,
-    { version: doc.version, content: '换成国产设备', bomLines: [{ lineNo: 1, itemName: '国产交换机', qty: 3, unitCost: 8000 }] },
+    { lockVersion: doc.lockVersion, content: '换成国产设备', bomLines: [{ lineNo: 1, itemName: '国产交换机', qty: 3, unitCost: 8000 }] },
     cookieA,
   )
   assert.equal(res.status, 200)
@@ -227,7 +227,7 @@ test('方案 PATCH：bomLines 是整批替换（删旧插新），content 一起
   assert.ok(!detail.bomLines.some((/** @type {any} */ l) => l.itemName === '核心交换机'))
 })
 
-test('方案：confirmed 后 PATCH → 409；重复 advance → 409；旧 version → 409', async (t) => {
+test('方案：confirmed 后 PATCH → 409；重复 advance → 409；旧 lockVersion → 409', async (t) => {
   if (!dbUp) return t.skip('需要数据库')
   const doc = await jsonOf(
     await app.call('POST', `/t/${slugA}/api/design-docs`, { projectId: projectA, title: '待确认方案', bomLines: bom() }, cookieA),
@@ -236,11 +236,11 @@ test('方案：confirmed 后 PATCH → 409；重复 advance → 409；旧 versio
   const stale = await app.call(
     'PATCH',
     `/t/${slugA}/api/design-docs/${doc.id}`,
-    { version: doc.version + 5, content: '旧版本改' },
+    { lockVersion: doc.lockVersion + 5, content: '旧版本改' },
     cookieA,
   )
   assert.equal(stale.status, 409)
-  assert.match((await jsonOf(stale)).error.details.reason, /版本已变/)
+  assert.match((await jsonOf(stale)).error.details.reason, /已被他人修改/)
 
   const ok = await app.call('POST', `/t/${slugA}/api/design-docs/${doc.id}/advance`, { to: 'confirmed' }, cookieA)
   assert.equal(ok.status, 200)
@@ -249,7 +249,7 @@ test('方案：confirmed 后 PATCH → 409；重复 advance → 409；旧 versio
   const locked = await app.call(
     'PATCH',
     `/t/${slugA}/api/design-docs/${doc.id}`,
-    { version: doc.version, bomLines: [bom()[0]] },
+    { lockVersion: doc.lockVersion, bomLines: [bom()[0]] },
     cookieA,
   )
   assert.equal(locked.status, 409)
@@ -277,7 +277,7 @@ test('跨租户：B 的 cookie 读/改 A 的需求与方案 → 404，列表不�
   )
   assert.equal((await app.call('GET', `/t/${slugB}/api/design-docs/${doc.id}`, undefined, cookieB)).status, 404)
   assert.equal(
-    (await app.call('PATCH', `/t/${slugB}/api/design-docs/${doc.id}`, { version: doc.version, content: '偷改' }, cookieB))
+    (await app.call('PATCH', `/t/${slugB}/api/design-docs/${doc.id}`, { lockVersion: doc.lockVersion, content: '偷改' }, cookieB))
       .status,
     404,
   )

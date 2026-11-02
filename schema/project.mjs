@@ -22,7 +22,7 @@ export const projectTables = [
       { n: 'version', t: 'int', notNull: true },
     ],
     uniq: [['code']],
-    index: [['party_id'], ['stage'], ['owner_id']],
+    index: [['party_id'], ['stage'], ['owner_id'], ['created_at', 'id']],
     fk: [{ cols: ['party_id'], ref: 'party' }],
   },
   {
@@ -44,7 +44,7 @@ export const projectTables = [
       { n: 'version', t: 'int', notNull: true },
     ],
     uniq: [['code']],
-    index: [['party_id'], ['status'], ['opportunity_id'], ['pm_user_id']],
+    index: [['party_id'], ['status'], ['opportunity_id'], ['pm_user_id'], ['created_at', 'id']],
     fk: [{ cols: ['party_id'], ref: 'party' }, { cols: ['opportunity_id'], ref: 'opportunity' }],
   },
   {
@@ -73,8 +73,10 @@ export const projectTables = [
       { n: 'confirmed_at', t: 'time' },
       { n: 'created_at', t: 'time', notNull: true },
       { n: 'updated_at', t: 'time', notNull: true },
+      // 乐观锁版本号：与 party/project/opportunity 的 version 同义，每次 PATCH +1
+      { n: 'version', t: 'int', notNull: true, default: '1' },
     ],
-    index: [['project_id'], ['status']],
+    index: [['project_id'], ['status'], ['created_at', 'id']],
     fk: [{ cols: ['project_id'], ref: 'project' }],
   },
   {
@@ -90,9 +92,12 @@ export const projectTables = [
       { n: 'confirmed_at', t: 'time' },
       { n: 'created_at', t: 'time', notNull: true },
       { n: 'updated_at', t: 'time', notNull: true },
+      // version 是"第几版方案"（业务号，建单才 +1，还有 uniq(project_id,version)），
+      // 改内容时它不变，拿来当乐观锁等于永远放行 —— 所以单开一列做锁
+      { n: 'lock_version', t: 'int', notNull: true, default: '1' },
     ],
     uniq: [['project_id', 'version']],
-    index: [['project_id'], ['status']],
+    index: [['project_id'], ['status'], ['created_at', 'id']],
     fk: [{ cols: ['project_id'], ref: 'project' }],
   },
   {
@@ -130,7 +135,7 @@ export const projectTables = [
       { n: 'updated_at', t: 'time', notNull: true },
     ],
     uniq: [['code']],
-    index: [['project_id'], ['party_id'], ['status']],
+    index: [['project_id'], ['party_id'], ['status'], ['created_at', 'id']],
     fk: [{ cols: ['project_id'], ref: 'project' }, { cols: ['party_id'], ref: 'party' }],
   },
   {
@@ -168,7 +173,7 @@ export const projectTables = [
       { n: 'updated_at', t: 'time', notNull: true },
     ],
     uniq: [['code']],
-    index: [['project_id'], ['party_id'], ['status'], ['quotation_id']],
+    index: [['project_id'], ['party_id'], ['status'], ['quotation_id'], ['created_at', 'id']],
     fk: [
       { cols: ['project_id'], ref: 'project' },
       { cols: ['party_id'], ref: 'party' },

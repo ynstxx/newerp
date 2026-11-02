@@ -45,6 +45,7 @@ test('canonical：复合主键、tenant_id 前缀、外键复合指向', () => {
   assert.deepEqual(party.index, [
     ['tenant_id', 'name'],
     ['tenant_id', 'party_type', 'status'],
+    ['tenant_id', 'created_at', 'id'],
   ])
   assert.deepEqual(c.party_contact.fk, [
     { cols: ['tenant_id', 'party_id'], ref: 'party', refCols: ['tenant_id', 'id'] },

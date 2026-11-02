@@ -61,7 +61,7 @@ export const partyTables = [
       { n: 'updated_at', t: 'time', notNull: true },
     ],
     uniq: [['code']],
-    index: [['name'], ['party_type', 'status']],
+    index: [['name'], ['party_type', 'status'], ['created_at', 'id']],
   },
   {
     name: 'party_contact',

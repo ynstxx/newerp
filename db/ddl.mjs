@@ -21,7 +21,7 @@ export const TYPES = {
  * @property {string} name
  * @property {boolean} tenant
  * @property {string[]} [pk]      声明主键；未声明则 (tenant_id,) id
- * @property {{ n: string, t: string, notNull?: boolean }[]} cols
+ * @property {{ n: string, t: string, notNull?: boolean, default?: string }[]} cols
  * @property {string[][]} [uniq]
  * @property {string[][]} [index]
  * @property {{ cols: string[], ref: string }[]} [fk]
@@ -31,7 +31,7 @@ export const TYPES = {
  * @typedef {object} RTable  已解析（tenant_id 补全）的表结构
  * @property {string} name
  * @property {boolean} tenant
- * @property {{ n: string, t: string, notNull: boolean }[]} cols
+ * @property {{ n: string, t: string, notNull: boolean, default?: string }[]} cols
  * @property {string[]} pk
  * @property {string[][]} uniq
  * @property {string[][]} index
@@ -47,13 +47,13 @@ export function canonical(tables) {
   const out = {}
   for (const t of tables) {
     const pk = t.pk ?? (t.tenant ? ['tenant_id', 'id'] : ['id'])
-    /** @type {{ n: string, t: string, notNull: boolean }[]} */
+    /** @type {{ n: string, t: string, notNull: boolean, default?: string }[]} */
     const cols = []
     if (!t.pk) {
       if (t.tenant) cols.push({ n: 'tenant_id', t: 'uuid', notNull: true })
       cols.push({ n: 'id', t: 'uuid', notNull: true })
     }
-    for (const c of t.cols) cols.push({ n: c.n, t: c.t, notNull: Boolean(c.notNull) })
+    for (const c of t.cols) cols.push({ n: c.n, t: c.t, notNull: Boolean(c.notNull), default: c.default })
     // 主键里声明了但没写的列（如 org_membership.tenant_id）自动补 uuid 非空
     for (const k of pk) if (!cols.some((c) => c.n === k)) cols.push({ n: k, t: 'uuid', notNull: true })
 
@@ -100,7 +100,9 @@ export function createTable(t, dialect, ifNotExists = false) {
   const lines = t.cols.map((c) => {
     const type = colType(dialect, c.t)
     const coll = dialect === 'pg' && (c.t === 'code' || c.t === 'text') ? collate : ''
-    return `  ${tq}${c.n}${tq} ${type}${coll}${c.notNull ? ' NOT NULL' : ''}`
+    // default 是原样 SQL 字面量（如 '1' / "'draft'"），不在这里做引号推断
+    const def = c.default === undefined ? '' : ` DEFAULT ${c.default}`
+    return `  ${tq}${c.n}${tq} ${type}${coll}${c.notNull ? ' NOT NULL' : ''}${def}`
   })
   lines.push(`  PRIMARY KEY (${t.pk.map((n) => `${tq}${n}${tq}`).join(', ')})`)
   // 唯一约束写成 CONSTRAINT 而不是 CREATE UNIQUE INDEX：
@@ -135,7 +137,7 @@ export function createIndexes(t, dialect) {
 
 /**
  * 声明结构 vs 快照 → 语句列表。
- * 故意不做：主键变更（危险，人工写）、纯索引增删（性能项，S7 上双库比对再说）
+ * 故意不做：主键变更（危险，人工写）
  * ponytail: 只覆盖 建表/加列/删列/改列/唯一约束，够 M0-M7 用
  * @param {Record<string, RTable>} prev
  * @param {Record<string, RTable>} next
@@ -161,7 +163,10 @@ export function diff(prev, next, dialect) {
     for (const c of t.cols) {
       const o = oldCols.get(c.n)
       if (!o) {
-        out.push(`ALTER TABLE ${q(name)} ADD COLUMN ${q(c.n)} ${colType(dialect, c.t)}${c.notNull ? ' NOT NULL' : ''};`)
+        const def = c.default === undefined ? '' : ` DEFAULT ${c.default}`
+        out.push(
+          `ALTER TABLE ${q(name)} ADD COLUMN ${q(c.n)} ${colType(dialect, c.t)}${c.notNull ? ' NOT NULL' : ''}${def};`,
+        )
         continue
       }
       if (o.t !== c.t) {
@@ -178,6 +183,20 @@ export function diff(prev, next, dialect) {
       }
     }
     for (const c of old.cols) if (!newCols.has(c.n)) out.push(`ALTER TABLE ${q(name)} DROP COLUMN ${q(c.n)};`)
+
+    // 普通索引：增删都要生成（唯一约束在下面单独处理）
+    const oldI = new Set(old.index.map((i) => i.join(',')))
+    const newI = new Set(t.index.map((i) => i.join(',')))
+    for (const i of t.index)
+      if (!oldI.has(i.join(',')))
+        out.push(`CREATE INDEX ${q(idxName('idx', t, i))} ON ${q(name)} (${i.map(q).join(', ')});`)
+    for (const i of old.index)
+      if (!newI.has(i.join(',')))
+        out.push(
+          dialect === 'mysql'
+            ? `ALTER TABLE ${q(name)} DROP INDEX ${q(idxName('idx', old, i))};`
+            : `DROP INDEX ${q(idxName('idx', old, i))};`,
+        )
 
     const oldU = new Set(old.uniq.map((u) => u.join(',')))
     const newU = new Set(t.uniq.map((u) => u.join(',')))

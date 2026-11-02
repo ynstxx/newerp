@@ -2,7 +2,8 @@ import { exec, one, q } from '../db/index.mjs'
 import { cursorClause } from '../http/page.mjs'
 
 // 租户表：所有语句必带 $t
-const COLS = 'id, project_id, title, version, content, status, confirmed_by, confirmed_at, created_at, updated_at'
+const COLS =
+  'id, project_id, title, version, lock_version, content, status, confirmed_by, confirmed_at, created_at, updated_at'
 const LINE_COLS = 'id, design_doc_id, line_no, item_name, spec, uom, qty, unit_cost, note'
 
 /** @param {any} ctx @param {string} id */
@@ -47,22 +48,23 @@ export const nextVersion = (ctx, projectId) =>
 export const insert = (ctx, p) =>
   exec(
     ctx,
-    `INSERT INTO design_doc (tenant_id, id, project_id, title, version, content, status, confirmed_by, confirmed_at, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL, $8, $8)`,
+    `INSERT INTO design_doc (tenant_id, id, project_id, title, version, lock_version, content, status, confirmed_by, confirmed_at, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, 1, $6, $7, NULL, NULL, $8, $8)`,
     [ctx.tenantId, p.id, p.projectId, p.title, p.version, p.content, p.status, p.now],
   )
 
 /**
- * version 是"第几版方案"这个业务号，不做自增；这里用它当乐观锁的值。
+ * 乐观锁走 lock_version：version 是"第几版方案"，改内容时它不变，
+ * 拿它做锁等于永远放行（审计 A8 就是这么丢更新的）。
  * @param {any} ctx
- * @param {{ id: string, content: string | null, expectedVersion: number, status: string, now: Date }} p
+ * @param {{ id: string, content: string | null, expectedLockVersion: number, status: string, now: Date }} p
  */
 export const update = (ctx, p) =>
   exec(
     ctx,
-    `UPDATE design_doc SET content = $1, updated_at = $2
-      WHERE $t AND id = $3 AND version = $4 AND status = $5`,
-    [p.content, p.now, p.id, p.expectedVersion, p.status],
+    `UPDATE design_doc SET content = $1, updated_at = $2, lock_version = lock_version + 1
+      WHERE $t AND id = $3 AND lock_version = $4 AND status = $5`,
+    [p.content, p.now, p.id, p.expectedLockVersion, p.status],
   )
 
 /**

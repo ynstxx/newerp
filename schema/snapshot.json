@@ -486,6 +486,11 @@
         "tenant_id",
         "party_type",
         "status"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": []
@@ -735,6 +740,11 @@
       [
         "tenant_id",
         "owner_id"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": [
@@ -857,6 +867,11 @@
       [
         "tenant_id",
         "pm_user_id"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": [
@@ -1008,6 +1023,12 @@
         "n": "updated_at",
         "t": "time",
         "notNull": true
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true,
+        "default": "1"
       }
     ],
     "pk": [
@@ -1023,6 +1044,11 @@
       [
         "tenant_id",
         "status"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": [
@@ -1097,6 +1123,12 @@
         "n": "updated_at",
         "t": "time",
         "notNull": true
+      },
+      {
+        "n": "lock_version",
+        "t": "int",
+        "notNull": true,
+        "default": "1"
       }
     ],
     "pk": [
@@ -1118,6 +1150,11 @@
       [
         "tenant_id",
         "status"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": [
@@ -1317,6 +1354,11 @@
       [
         "tenant_id",
         "status"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": [
@@ -1531,6 +1573,11 @@
       [
         "tenant_id",
         "quotation_id"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
     "fk": [

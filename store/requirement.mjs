@@ -2,7 +2,7 @@ import { exec, one, q } from '../db/index.mjs'
 import { cursorClause } from '../http/page.mjs'
 
 // 租户表：所有语句必带 $t
-const COLS = 'id, project_id, title, content, status, confirmed_by, confirmed_at, created_at, updated_at'
+const COLS = 'id, project_id, title, content, status, confirmed_by, confirmed_at, created_at, updated_at, version'
 
 /** @param {any} ctx @param {string} id */
 export const byId = (ctx, id) => one(ctx, `SELECT ${COLS} FROM requirement WHERE $t AND id = $1`, [id])
@@ -44,23 +44,24 @@ export function list(ctx, f) {
 export const insert = (ctx, p) =>
   exec(
     ctx,
-    `INSERT INTO requirement (tenant_id, id, project_id, title, content, status, confirmed_by, confirmed_at, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, NULL, NULL, $7, $7)`,
+    `INSERT INTO requirement (tenant_id, id, project_id, title, content, status, confirmed_by, confirmed_at, created_at, updated_at, version)
+     VALUES ($1, $2, $3, $4, $5, $6, NULL, NULL, $7, $7, 1)`,
     [ctx.tenantId, p.id, p.projectId, p.title, p.content, p.status, p.now],
   )
 
 /**
- * 需求表没有 version 列（schema 不可改），并发靠确认时的 status 条件兜底。
+ * 乐观锁：version 必须匹配才改，改完自增。0 行 → 上层按 409 处理。
  * @param {any} ctx
- * @param {{ id: string, title: string, content: string | null, now: Date }} p
+ * @param {{ id: string, title: string, content: string | null, expectedVersion: number, now: Date }} p
  */
 export const update = (ctx, p) =>
-  exec(ctx, `UPDATE requirement SET title = $1, content = $2, updated_at = $3 WHERE $t AND id = $4`, [
-    p.title,
-    p.content,
-    p.now,
-    p.id,
-  ])
+  exec(
+    ctx,
+    `UPDATE requirement
+        SET title = $1, content = $2, updated_at = $3, version = version + 1
+      WHERE $t AND id = $4 AND version = $5`,
+    [p.title, p.content, p.now, p.id, p.expectedVersion],
+  )
 
 /**
  * 状态变更：带上 from 状态做并发兜底，0 行由 svc 转 409。

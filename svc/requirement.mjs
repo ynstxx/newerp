@@ -29,6 +29,7 @@ export const toApi = (r) => ({
   confirmedAt: r.confirmed_at,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  version: r.version,
 })
 
 /**
@@ -87,8 +88,7 @@ export async function createRequirement(ctx, input) {
 }
 
 /**
- * PATCH 只改传了的字段。body.version 只为兼容调用方保留：
- * requirement 表没有 version 列，这里不做乐观锁。
+ * PATCH 只改传了的字段。body.version 是乐观锁版本号，不匹配即 409。
  * @param {any} ctx
  * @param {string} id
  * @param {Record<string, any>} patch
@@ -100,16 +100,23 @@ export async function updateRequirement(ctx, id, patch) {
   if (cur.status !== 'draft') {
     throw new HttpError(errors.conflict, { reason: `需求已是 ${cur.status}，不可再改`, allowed: [] })
   }
+  // 客户端带了 version 就先比一次（早失败、错误更明确）；不带也安全，
+  // 下面的 UPDATE 会用服务端读到的 version 做原子兜底
+  if (patch.version !== undefined && patch.version !== cur.version) {
+    throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
+  }
 
   const now = new Date()
   const row = {
     id,
     title: patch.title ?? cur.title,
     content: patch.content !== undefined ? patch.content : cur.content,
+    expectedVersion: cur.version,
     now,
   }
   await withTx(ctx, async (tx) => {
-    await store.update(tx, row)
+    const n = await store.update(tx, row)
+    if (!n) throw new HttpError(errors.conflict, { reason: '并发修改，请重试' })
     await audit.insert(tx, {
       id: randomUUID(),
       module: 'requirement',

@@ -8,7 +8,7 @@ import { validate } from '../http/validate.mjs'
 import * as svc from '../svc/design.mjs'
 
 const CREATE_FIELDS = ['projectId', 'title', 'content', 'bomLines']
-const PATCH_FIELDS = ['version', 'content', 'bomLines']
+const PATCH_FIELDS = ['lockVersion', 'content', 'bomLines']
 const ADVANCE_FIELDS = ['to']
 const LINE_FIELDS = ['lineNo', 'itemName', 'spec', 'uom', 'qty', 'unitCost', 'note']
 const MAX_LINES = 200
@@ -18,6 +18,7 @@ const SPEC = {
   projectId: { type: 'string', required: true, max: 64 },
   title: { type: 'string', required: true, max: 64 },
   version: { type: 'int' },
+  lockVersion: { type: 'int' },
   content: { type: 'string', max: 2000 },
 }
 
