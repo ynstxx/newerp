@@ -44,7 +44,7 @@ test('骨架：/healthz 200，未知路径 404，方法不符 405', async (t) =>
   assert.equal(body.ok, body.db === 'up', 'ok 必须与 db 一致')
   assert.match(ok.headers.get('x-request-id') ?? '', /^[0-9a-f-]{36}$/)
 
-  const missing = await fetch(`${base}/nope`)
+  const missing = await fetch(`${base}/api/nope`)
   assert.equal(missing.status, 404)
   assert.equal(/** @type {any} */ (await missing.json()).error.code, 'not_found')
 

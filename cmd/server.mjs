@@ -5,6 +5,7 @@ import { createRouter } from '../http/router.mjs'
 import { compose, recover, requestId, log } from '../http/middleware.mjs'
 import { createContext } from '../http/context.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
+import { serveStatic } from '../http/static.mjs'
 import { health } from '../api/health.mjs'
 import { login, logout, me } from '../api/auth.mjs'
 import { createInvite, register, registerInfo } from '../api/registration.mjs'
@@ -35,7 +36,11 @@ async function authSession(ctx, next) {
 /** @type {import('../http/middleware.mjs').Middleware} */
 async function dispatch(ctx) {
   const hit = router.resolve(ctx.req.method ?? 'GET', ctx.path)
-  if (!hit) throw new HttpError(errors.notFound)
+  if (!hit) {
+    // 路由没命中再试静态资源（前端构建产物），都没有才 404
+    if (await serveStatic(ctx)) return
+    throw new HttpError(errors.notFound)
+  }
   if ('allow' in hit) {
     ctx.res.setHeader('allow', hit.allow.join(', '))
     throw new HttpError(errors.methodNotAllowed)

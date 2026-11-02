@@ -1,0 +1,41 @@
+{
+  "app": { "name": "信息化集成管理", "lang": "EN" },
+  "login": {
+    "title": "登录",
+    "email": "邮箱",
+    "password": "密码",
+    "submit": "登录",
+    "failed": "邮箱或密码不正确"
+  },
+  "company": {
+    "pick": "选择公司",
+    "empty": "你还没有加入任何公司",
+    "switch": "切换公司"
+  },
+  "nav": { "logout": "退出", "hello": "你好" },
+  "party": {
+    "title": "客户与供应商",
+    "new": "新建",
+    "edit": "编辑",
+    "delete": "删除",
+    "search": "搜索编码或名称",
+    "code": "编码",
+    "name": "名称",
+    "type": "类型",
+    "status": "状态",
+    "contact": "联系人",
+    "phone": "电话",
+    "email": "邮箱",
+    "addr": "地址",
+    "taxNo": "税号",
+    "remark": "备注",
+    "empty": "还没有记录，点右上角新建",
+    "loadMore": "加载更多",
+    "noMore": "没有更多了",
+    "deleted": "已删除",
+    "confirmDelete": "确定删除这条记录？"
+  },
+  "type": { "customer": "客户", "supplier": "供应商", "both": "两者兼有" },
+  "status": { "active": "启用", "disabled": "停用" },
+  "action": { "save": "保存", "cancel": "取消", "saved": "已保存" }
+}

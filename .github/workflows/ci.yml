@@ -86,6 +86,25 @@ jobs:
         run: node cmd/migrate.mjs up
       - run: npm test
 
+  # ── 前端：构建产物 + 后端托管门禁 ───────────────────────────────────────
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: 前端依赖
+        run: npm ci
+        working-directory: web
+      - name: 构建
+        run: npm run build
+        working-directory: web
+      - name: 静态托管门禁
+        run: node --test test/static.test.mjs
+
   # ── 结构等价门禁：两个库同时在场，归一化后必须逐字节一致 ────────────────
   dual:
     runs-on: ubuntu-latest

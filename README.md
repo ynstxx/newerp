@@ -14,9 +14,23 @@
 
 ## 状态
 
-**M0 完成** —— 骨架 + 双库迁移（11 表）+ 认证/租户/权限 + 四模式注册 + 客户主数据 CRUD + 双库等价门禁
+**M0 完成** —— 骨架 + 双库迁移（11 表）+ 认证/租户/权限 + 四模式注册 + 客户主数据 CRUD + 双库等价门禁 + 前端外壳
 
-前端（S6）未开始：`web/` 目录还不存在。
+## 两条跑法
+
+**开发（两个终端）**
+
+```bash
+node cmd/server.mjs          # 后端 :8080（本机被占就让 .env 指到 8099）
+cd web && npm run dev        # 前端 :5173，/api 与 /t 代理到后端
+```
+
+**构建后一体化**
+
+```bash
+cd web && npm run build      # 产物进 web/dist，由 http/static.mjs 托管
+node cmd/server.mjs          # 直接开 localhost:8080 就能用
+```
 
 ## 首次进入
 
@@ -72,6 +86,7 @@ DB_DRIVER=mysql DB_PORT=3308 node cmd/migrate.mjs check
 |---|---|
 | `test-pg` | 空库建表 → `migrate check` → 再 `up` 验幂等 → 全量测试 → 健康检查 |
 | `test-mysql` | 同上，换 MySQL 8.0 |
+| `web` | 前端构建 → 静态托管门禁（index / 带 hash 产物 / SPA 回落 / ETag 304 / 不泄漏密钥） |
 | `dual` | 两个库同时在场，`information_schema` 归一化后**逐字节比对** |
 | `npm run typecheck` | `tsc --noEmit`（仅检查，不产出 JS） |
 

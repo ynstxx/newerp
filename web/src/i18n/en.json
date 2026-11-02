@@ -1,0 +1,41 @@
+{
+  "app": { "name": "Integration ERP", "lang": "中文" },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "failed": "Wrong email or password"
+  },
+  "company": {
+    "pick": "Choose a company",
+    "empty": "You are not a member of any company yet",
+    "switch": "Switch company"
+  },
+  "nav": { "logout": "Sign out", "hello": "Hi" },
+  "party": {
+    "title": "Customers & suppliers",
+    "new": "New",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search code or name",
+    "code": "Code",
+    "name": "Name",
+    "type": "Type",
+    "status": "Status",
+    "contact": "Contact",
+    "phone": "Phone",
+    "email": "Email",
+    "addr": "Address",
+    "taxNo": "Tax ID",
+    "remark": "Notes",
+    "empty": "Nothing yet — use New",
+    "loadMore": "Load more",
+    "noMore": "No more",
+    "deleted": "Deleted",
+    "confirmDelete": "Delete this record?"
+  },
+  "type": { "customer": "Customer", "supplier": "Supplier", "both": "Both" },
+  "status": { "active": "Active", "disabled": "Disabled" },
+  "action": { "save": "Save", "cancel": "Cancel", "saved": "Saved" }
+}
