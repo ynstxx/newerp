@@ -833,18 +833,20 @@ export async function createProgress(ctx, id, input) {
     })
   }
   const amtCents = positiveCents(input.amount, 'amount')
-  const done = centsOf(String((await store.progressSum(ctx, id))?.total ?? 0))
-  const total = done + amtCents
   const cap = centsOf(sub.amount)
-  if (total > cap) {
-    throw new HttpError(errors.conflict, {
-      reason: `进度款累计超合同额：合同 ${moneyOf(cap)}，已报 ${moneyOf(done)}，本次 ${moneyOf(amtCents)}`,
-      remaining: moneyOf(cap - done),
-    })
-  }
   const now = new Date()
   const pid = randomUUID()
   await withTx(ctx, async (tx) => {
+    // S4：先锁分包行，再在事务内重算累计 —— 事务外读再插，并发两笔各 60 万都能过检查
+    const locked = await store.lockSub(tx, id)
+    if (!locked) throw new HttpError(errors.notFound)
+    const done = centsOf(String((await store.progressSum(tx, id))?.total ?? 0))
+    if (done + amtCents > cap) {
+      throw new HttpError(errors.conflict, {
+        reason: `进度款累计超合同额：合同 ${moneyOf(cap)}，已报 ${moneyOf(done)}，本次 ${moneyOf(amtCents)}`,
+        remaining: moneyOf(cap - done),
+      })
+    }
     await store.progressInsert(tx, {
       id: pid,
       subcontractId: id,

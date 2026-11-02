@@ -6,9 +6,21 @@ import { normCode } from '../http/validate.mjs'
 import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/service_contract.mjs'
+import { allowedNext, assertTransition } from './transition.mjs'
 
-/** 服务合同没有复杂状态机：active 到期转 expired，终止只能人工置 terminated。 */
-export const CONTRACT_STATUSES = /** @type {const} */ (['active', 'expired', 'terminated'])
+/**
+ * 服务合同状态机：active 到期转 expired，终止只能人工置 terminated。
+ * 之前是 PATCH 直写 status —— 终态后能改回来，也拿不到 allowed（审计 B1）。
+ */
+export const SERVICE_CONTRACT_TRANSITIONS = /** @type {const} */ ({
+  active: ['expired', 'terminated'],
+  expired: ['terminated'],
+  terminated: [],
+})
+export const CONTRACT_STATUSES = Object.keys(SERVICE_CONTRACT_TRANSITIONS)
+
+/** 已终态/已过期的合同不允许再改条款（会污染新工单的 SLA 预计算） */
+const EDITABLE = new Set(['active'])
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -34,6 +46,7 @@ export const toApi = (r) => ({
   amount: num(r.amount),
   status: r.status,
   version: r.version,
+  allowed: allowedNext(SERVICE_CONTRACT_TRANSITIONS, r.status),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 })
@@ -110,47 +123,55 @@ export async function createContract(ctx, input) {
 export async function updateContract(ctx, id, patch) {
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
-  const expectedVersion = patch.version ?? cur.version
-  if (expectedVersion !== cur.version) {
+  if (patch.version !== undefined && patch.version !== cur.version) {
     throw new HttpError(errors.conflict, { reason: `版本已变（当前 ${cur.version}）` })
   }
 
-  const partyId = patch.partyId !== undefined ? assertId(patch.partyId) : cur.party_id
-  if (partyId !== cur.party_id && !(await store.partyById(ctx, partyId))) throw new HttpError(errors.notFound)
+  const toStatus = patch.status ?? cur.status
+  if (toStatus !== cur.status) assertTransition('service_contract', SERVICE_CONTRACT_TRANSITIONS, cur.status, toStatus)
+  // 改条款只在 active 且状态不变时允许；终态或转状态时只接受 status 本身
+  const fieldsChanged = ['name', 'startAt', 'endAt', 'slaLevel', 'responseMinutes', 'resolveMinutes', 'amount', 'partyId'].some(
+    (k) => patch[k] !== undefined,
+  )
+  if (fieldsChanged && (!EDITABLE.has(cur.status) || toStatus !== cur.status)) {
+    throw new HttpError(errors.conflict, {
+      reason: `合同已是 ${cur.status}，条款不可再改（只能改状态）`,
+      allowed: allowedNext(SERVICE_CONTRACT_TRANSITIONS, cur.status),
+    })
+  }
+
   const code = patch.code !== undefined ? normCode(patch.code) : cur.code
-  if (code !== cur.code) {
-    const dup = await store.byCode(ctx, code)
-    if (dup && dup.id !== id) throw new HttpError(errors.conflict, { reason: `服务合同编号 ${code} 已存在` })
+  if (code !== cur.code && (await store.byCode(ctx, code))) {
+    throw new HttpError(errors.conflict, { reason: `合同编号 ${code} 已存在` })
   }
 
   const now = new Date()
-  const row = {
-    id,
-    expectedVersion: cur.version,
-    code,
-    partyId,
-    name: patch.name ?? cur.name,
-    startAt: 'startAt' in patch ? patch.startAt : cur.start_at,
-    endAt: 'endAt' in patch ? patch.endAt : cur.end_at,
-    slaLevel: patch.slaLevel ?? cur.sla_level,
-    responseMinutes: patch.responseMinutes ?? cur.response_minutes,
-    resolveMinutes: patch.resolveMinutes ?? cur.resolve_minutes,
-    amount: patch.amount ?? cur.amount,
-    status: patch.status ?? cur.status,
-    now,
-  }
   await withTx(ctx, async (tx) => {
-    const n = await store.update(tx, row)
+    const n = await store.update(tx, {
+      id,
+      code,
+      partyId: patch.partyId ?? cur.party_id,
+      name: patch.name ?? cur.name,
+      startAt: patch.startAt ?? cur.start_at,
+      endAt: patch.endAt ?? cur.end_at,
+      slaLevel: patch.slaLevel ?? cur.sla_level,
+      responseMinutes: patch.responseMinutes ?? cur.response_minutes,
+      resolveMinutes: patch.resolveMinutes ?? cur.resolve_minutes,
+      amount: patch.amount ?? cur.amount,
+      status: toStatus,
+      expectedVersion: cur.version,
+      now,
+    })
     if (!n) throw new HttpError(errors.conflict, { reason: '并发修改，请重试' })
     await audit.insert(tx, {
       id: randomUUID(),
-      module: 'service',
-      action: 'contract:update',
+      module: 'service_contract',
+      action: toStatus !== cur.status ? 'advance' : 'update',
       whoId: ctx.userId ?? null,
       refType: 'service_contract',
       refId: id,
-      before: toApi(cur),
-      after: { ...row, expectedVersion: undefined, now: undefined },
+      before: { status: cur.status, name: cur.name },
+      after: { status: toStatus, name: patch.name ?? cur.name },
       traceId: ctx.requestId ?? '',
       at: now,
     })

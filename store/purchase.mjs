@@ -293,6 +293,12 @@ export const progressOf = (ctx, subcontractId) =>
   )
 
 /** @param {any} ctx @param {string} subcontractId */
+/** 锁分包合同行：进度款累计校验必须先拿锁，否则并发两笔都能过检查
+ * @param {any} ctx @param {string} id */
+export const lockSub = (ctx, id) =>
+  one(ctx, `SELECT id, code, amount, status, version FROM subcontract WHERE $t AND id = $1 FOR UPDATE`, [id])
+
+/** @param {any} ctx @param {string} subcontractId */
 export const progressSum = (ctx, subcontractId) =>
   one(
     ctx,

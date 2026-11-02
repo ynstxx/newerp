@@ -272,7 +272,7 @@ test('领料：库存充足 → 审批通过后出库，余额减少；拒绝则
   assert.equal(Number(moves.body.items[0].qty), 3)
 })
 
-test('领料多明细：后一行库存不足 → 已出库行被反向补偿，账不留半边', async (t) => {
+test('领料多明细：后一行库存不足 → 整个审批事务回滚，账不留半边', async (t) => {
   if (!dbUp) return t.skip('需要数据库')
   const projectId = await seedProject('constructing')
   const okItem = await makeItem('MULTI-OK')
@@ -302,13 +302,18 @@ test('领料多明细：后一行库存不足 → 已出库行被反向补偿，
   const decided = await decideTask(submitted.body.approvalInstanceId)
   assert.equal(decided.status, 409, JSON.stringify(decided.body))
 
+  // 关键：整个审批事务回滚 —— 先出库那一行也跟着回滚，余额回到 10
   const bal = await call('GET', A(`/api/stock/balances?warehouseId=${wh.id}&itemId=${okItem.id}`))
-  assert.equal(Number(bal.body.items[0].qty), 10, '已出库的那一行必须被补偿回滚')
+  assert.equal(Number(bal.body.items[0].qty), 10, '回滚后余额应回到入库时的值')
+
+  // 回滚语义下不该留下任何流水（不是「出库 + 反向入库」两条）
   const moves = await call('GET', A(`/api/stock/moves?refType=material_issue&refId=${created.body.id}&order=asc`))
-  assert.deepEqual(
-    moves.body.items.map((/** @type {any} */ m) => `${m.dir}:${m.moveType}`),
-    ['out:material_issue', 'in:material_issue_reverse'],
-  )
+  assert.deepEqual(moves.body.items.map((/** @type {any} */ m) => `${m.dir}:${m.moveType}`), [])
+
+  // 失败原因必须留在单据上，运维才查得到
+  const failed = await call('GET', A(`/api/material-issues/${created.body.id}`))
+  assert.equal(failed.body.status, 'failed')
+  assert.match(String(failed.body.errorMessage ?? ''), /库存|不足/)
 })
 
 // ── ③ 变更签证 ──────────────────────────────────────────────────────────────

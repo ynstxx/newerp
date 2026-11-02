@@ -144,13 +144,15 @@ export const taskInsert = (ctx, p) =>
  * @param {any} ctx
  * @param {{ id: string, expectedVersion: number, title: string, assigneeId: string | null, planStart: Date | null, planEnd: Date | null, note: string | null, now: Date }} p
  */
+/** done 是终态：已完成的任务不能再改字段（0 行 → 上层转 409）
+ * @param {any} ctx @param {any} p */
 export const taskUpdate = (ctx, p) =>
   exec(
     ctx,
     `UPDATE work_task
         SET title = $1, assignee_id = $2, plan_start = $3, plan_end = $4, note = $5,
             version = version + 1, updated_at = $6
-      WHERE $t AND id = $7 AND version = $8`,
+      WHERE $t AND id = $7 AND version = $8 AND status <> 'done'`,
     [p.title, p.assigneeId, p.planStart, p.planEnd, p.note, p.now, p.id, p.expectedVersion],
   )
 

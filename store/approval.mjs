@@ -76,6 +76,15 @@ const INSTANCE_COLS =
 export const instanceById = (ctx, id) =>
   one(ctx, `SELECT ${INSTANCE_COLS} FROM approval_instance WHERE $t AND id = $1`, [id])
 
+/**
+ * 决策前先锁实例行：mode='all' 的会签里，两个人同时点通过时，
+ * 各自读到对方任务还是 pending（MVCC 旧版本），结果谁都不推进，
+ * 实例永久卡在该级。锁住实例行后所有决策串行，后来者读到的是已提交的真相。
+ * @param {any} ctx @param {string} id
+ */
+export const lockInstance = (ctx, id) =>
+  one(ctx, `SELECT ${INSTANCE_COLS} FROM approval_instance WHERE $t AND id = $1 FOR UPDATE`, [id])
+
 /** @param {any} ctx @param {string} docType @param {string} docId */
 export const pendingInstanceByDoc = (ctx, docType, docId) =>
   one(

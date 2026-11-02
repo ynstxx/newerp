@@ -14,6 +14,13 @@ import * as seq from '../store/code_seq.mjs'
  * @returns {Promise<string>}
  */
 export async function nextCode(ctx, prefix) {
+  // 拿不到独立事务时直接拒绝：撞唯一键的重试在 PG 的 aborted 事务上必然再失败，
+  // 那种「静默失效」比直接报错糟糕得多。需要编号的写路径要先把 code 取好再开事务。
+  if (ctx?.conn) {
+    throw new HttpError(errors.conflict, {
+      reason: '编号生成不能在事务内调用，请先在事务外取号再传入 code',
+    })
+  }
   // 租户可以在「系统设置」里关掉自动编号 —— 有些客户有自己的编码体系
   if (!(await config.isCodeAuto(ctx))) {
     throw new HttpError(errors.badRequest, {

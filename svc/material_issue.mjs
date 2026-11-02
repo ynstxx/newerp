@@ -22,7 +22,8 @@ import { assertId, mustProject } from './work.mjs'
  * - 出库**失败不吞**：hook 里标记 material_issue=failed + error_message，然后重新抛出；
  *   审批引擎（svc/approval.mjs）把 approval_instance 落 failed 并记 approval_event，
  *   事务提交后再把原始 409 抛给调用方。
- * - 多明细先按物料聚合成一条 stock_move；中途失败则用反向 applyMove 补偿，不留半边账。
+ * - 多明细先按物料聚合成一条 stock_move；中途失败整个审批事务回滚（流水一起回滚），
+ *   单据由 onIssueFailed 落 failed + 原因。不再做「反向补偿」——回滚本身就够了。
  * - 领料不带 SN（见 docs/work-DESIGN.md）。
  */
 
@@ -326,7 +327,7 @@ function reasonOf(err, itemId) {
  */
 export async function onIssueApproved(ctx, _docType, docId) {
   const issue = await store.issueById(ctx, docId)
-  // 单据被删/已处理：审批结果无处落，静默返回（审批单本身仍会记为 approved）
+  // 单据被删/已处理：审批结果无处落，静默返回
   if (!issue) return
   if (issue.status !== 'pending') return
 
@@ -342,60 +343,24 @@ export async function onIssueApproved(ctx, _docType, docId) {
   }
 
   const now = new Date()
-  /** @type {{ itemId: string, qty: string, unitCost: string | null }[]} */
-  const applied = []
-  try {
-    for (const [itemId, { cents, unitCost }] of byItem) {
-      const qty = moneyOf(cents)
-      await applyMove(ctx, {
-        warehouseId: issue.warehouse_id,
-        itemId,
-        qty,
-        dir: 'out',
-        moveType: MOVE_TYPE,
-        refType: MATERIAL_ISSUE_DOC_TYPE,
-        refId: issue.id,
-        unitCost,
-      })
-      applied.push({ itemId, qty, unitCost })
-    }
-  } catch (err) {
-    // 同一事务内补偿已出库的物料：要么整单出库，要么一行都不动
-    let reverseError = ''
-    for (const a of applied) {
-      try {
-        await applyMove(ctx, {
-          warehouseId: issue.warehouse_id,
-          itemId: a.itemId,
-          qty: a.qty,
-          dir: 'in',
-          moveType: MOVE_TYPE_REVERSE,
-          refType: MATERIAL_ISSUE_DOC_TYPE,
-          refId: issue.id,
-          unitCost: a.unitCost,
-        })
-      } catch (e) {
-        reverseError = `；补偿回滚也失败：${/** @type {Error} */ (e).message}`
-      }
-    }
-    const message = `${reasonOf(err)}${reverseError}`
-    await store.issueSetStatus(ctx, { id: issue.id, from: 'pending', to: 'failed', errorMessage: message, now })
-    await audit.insert(ctx, {
-      id: randomUUID(),
-      module: 'material_issue',
-      action: 'issue_failed',
-      whoId: ctx.userId ?? null,
-      refType: 'material_issue',
+  // 按 itemId 排序再出库：两张单物料顺序相反时，不排序会互相等行锁形成死锁（审计 S2）
+  const ordered = [...byItem.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+  for (const [itemId, { cents, unitCost }] of ordered) {
+    await applyMove(ctx, {
+      warehouseId: issue.warehouse_id,
+      itemId,
+      qty: moneyOf(cents),
+      dir: 'out',
+      moveType: MOVE_TYPE,
+      refType: MATERIAL_ISSUE_DOC_TYPE,
       refId: issue.id,
-      before: { status: issue.status },
-      after: { status: 'failed', error: message },
-      traceId: ctx.requestId ?? '',
-      at: now,
+      unitCost,
     })
-    throw err instanceof HttpError ? err : new HttpError(errors.conflict, { reason: message })
   }
 
-  await store.issueSetStatus(ctx, { id: issue.id, from: 'pending', to: 'issued', now })
+  // 成功后只改状态：流水已在同一事务里写入
+  const done = await store.issueSetStatus(ctx, { id: issue.id, from: 'pending', to: 'issued', now })
+  if (!done) throw new HttpError(errors.conflict, { reason: '领料单状态已被并发修改' })
   await audit.insert(ctx, {
     id: randomUUID(),
     module: 'material_issue',
@@ -404,7 +369,31 @@ export async function onIssueApproved(ctx, _docType, docId) {
     refType: 'material_issue',
     refId: issue.id,
     before: { status: issue.status },
-    after: { status: 'issued', warehouseId: issue.warehouse_id, items: applied.length, amount: issue.amount },
+    after: { status: 'issued', warehouseId: issue.warehouse_id, items: ordered.length, amount: issue.amount },
+    traceId: ctx.requestId ?? '',
+    at: now,
+  })
+}
+
+/**
+ * 出库失败后的补偿：**在独立事务里跑**（审批决定已经整体回滚，出库流水也随之回滚，
+ * 所以这里不需要反向入库 —— 只需要把「失败」和原因记在单据上）。
+ * @param {any} ctx @param {string} _docType @param {string} docId @param {any} _inst @param {string} reason
+ */
+export async function onIssueFailed(ctx, _docType, docId, _inst, reason) {
+  const issue = await store.issueById(ctx, docId)
+  if (!issue || issue.status !== 'pending') return
+  const now = new Date()
+  await store.issueSetStatus(ctx, { id: issue.id, from: 'pending', to: 'failed', errorMessage: reason, now })
+  await audit.insert(ctx, {
+    id: randomUUID(),
+    module: 'material_issue',
+    action: 'issue_failed',
+    whoId: ctx.userId ?? null,
+    refType: 'material_issue',
+    refId: issue.id,
+    before: { status: issue.status },
+    after: { status: 'failed', error: reason },
     traceId: ctx.requestId ?? '',
     at: now,
   })
@@ -430,4 +419,8 @@ export async function onIssueRejected(ctx, _docType, docId) {
   })
 }
 
-hooks.register(MATERIAL_ISSUE_DOC_TYPE, { onApproved: onIssueApproved, onRejected: onIssueRejected })
+hooks.register(MATERIAL_ISSUE_DOC_TYPE, {
+  onApproved: onIssueApproved,
+  onRejected: onIssueRejected,
+  onFailed: onIssueFailed,
+})

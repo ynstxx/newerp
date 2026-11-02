@@ -517,8 +517,63 @@ async function loadTask(ctx, taskId) {
  * @param {string} taskId
  * @param {{ action: 'approve'|'reject', comment?: string | null }} input
  */
+/**
+ * 钩子失败后的收尾：独立事务里把审批单落 failed、写事件与审计，
+ * 再调业务侧的 onFailed（业务单据落 failed + 补偿，比如领料反向入库）。
+ * @param {any} ctx @param {string} instanceId @param {string} reason
+ */
+async function settleHookFailure(ctx, instanceId, reason) {
+  /** @type {any} */
+  let out = null
+  await withTx(ctx, async (tx) => {
+    const row = await store.instanceById(tx, instanceId)
+    if (!row) return
+    const now = new Date()
+    const failed = await store.instanceFinish(tx, {
+      id: row.id,
+      from: row.status,
+      to: 'failed',
+      expectedVersion: row.version,
+      now,
+    })
+    if (failed) {
+      await store.eventInsert(tx, {
+        id: randomUUID(),
+        instanceId: row.id,
+        actorId: ctx.userId ?? null,
+        action: 'failed',
+        comment: reason,
+        now,
+      })
+      await audit.insert(tx, {
+        id: randomUUID(),
+        module: 'approval',
+        action: 'hook_failed',
+        whoId: ctx.userId ?? null,
+        refType: 'approval_instance',
+        refId: row.id,
+        before: { status: row.status },
+        after: { status: 'failed', docType: row.doc_type, docId: row.doc_id, error: reason },
+        traceId: ctx.requestId ?? '',
+        at: now,
+      })
+    }
+    // 业务侧补偿：事务已回滚干净，这里可以安全写 failed + 反向流水
+    await hooks.runFailed(tx, row, reason)
+    out = await store.instanceById(tx, instanceId)
+  })
+  return out
+}
+
+/**
+ * @param {any} ctx
+ * @param {string} taskId
+ * @param {{ action: 'approve' | 'reject', comment?: string | null }} input
+ */
 export async function decide(ctx, taskId, input) {
-  const { task, inst, step, snapshot } = await loadTask(ctx, taskId)
+  const loaded = await loadTask(ctx, taskId)
+  const { task, step, snapshot } = loaded
+  let inst = loaded.inst
   const action = input.action
   if (!DECIDE_ACTIONS.includes(action)) {
     throw new HttpError(errors.badRequest, { fields: { action: `enum:${DECIDE_ACTIONS.join('|')}` } })
@@ -544,7 +599,19 @@ export async function decide(ctx, taskId, input) {
   /** 钩子异常先记下，等事务提交后再抛（事务里抛会回滚 failed 标记） */
   /** @type {unknown} */
   let hookError = null
-  await withTx(ctx, async (tx) => {
+  try {
+    await withTx(ctx, async (tx) => {
+    // S1：锁住实例行，把同一实例的并发决策串行化（mode='all' 会签必须这样）
+    const locked = await store.lockInstance(tx, inst.id)
+    if (!locked) throw new HttpError(errors.notFound)
+    inst = { ...inst, ...locked }
+    if (inst.status !== 'pending') {
+      throw new HttpError(errors.conflict, {
+        reason: `审批单已是 ${inst.status}，不能再处理`,
+        allowed: allowedNext(INSTANCE_TRANSITIONS, inst.status),
+      })
+    }
+
     const n = await store.taskDecide(tx, {
       id: task.id,
       expectedVersion: task.version,
@@ -577,40 +644,12 @@ export async function decide(ctx, taskId, input) {
       try {
         await hooks.run(to === 'approved' ? 'approve' : 'reject', tx, row)
       } catch (err) {
-        // 业务钩子失败（领料库存不足等）：**不让整个事务回滚** —— 否则审批结果、业务单据的
-        // failed 标记、补偿流水全部丢失，错就真被吞了。先把审批单落 failed 并把原因写进
-        // approval_event，事务提交后再把原始错误抛给调用方。
+        // 钩子失败（领料库存不足、台账写失败…）。两条铁律：
+        // 1) 不能在 aborted 事务里继续写 failed —— PG 会抛 25P02，MySQL 却可能写进去，两库分裂
+        // 2) 必须让事务整体回滚 —— 否则出库流水已提交、单据却落 failed，就是"半落账"
+        // 所以这里只记下错误并抛出，收尾放到事务外（settleHookFailure）。
         hookError = err
-        const reason = hookReason(err)
-        const failed = await store.instanceFinish(tx, {
-          id: inst.id,
-          from: row.status,
-          to: 'failed',
-          expectedVersion: row.version,
-          now,
-        })
-        if (failed) {
-          await store.eventInsert(tx, {
-            id: randomUUID(),
-            instanceId: inst.id,
-            actorId: ctx.userId ?? null,
-            action: 'failed',
-            comment: reason,
-            now,
-          })
-          await audit.insert(tx, {
-            id: randomUUID(),
-            module: 'approval',
-            action: 'hook_failed',
-            whoId: ctx.userId ?? null,
-            refType: 'approval_instance',
-            refId: inst.id,
-            before: { status: row.status },
-            after: { status: 'failed', docType: inst.doc_type, docId: inst.doc_id, error: reason },
-            traceId: ctx.requestId ?? '',
-            at: now,
-          })
-        }
+        throw err
       }
       return row
     }
@@ -657,9 +696,17 @@ export async function decide(ctx, taskId, input) {
       at: now,
     })
   })
-  // 业务落库失败：审批单已按 failed 提交，错误照样往外抛（不吞）
+  } catch (err) {
+    // 钩子错误引起的回滚是预期路径；其它错误照常往上抛
+    if (!hookError) throw err
+  }
+
+  // 业务落库失败：事务已整体回滚（审批任务仍是 pending、出库流水也已回滚），
+  // 现在单独开一个事务把「失败」这件事记下来，再交给业务侧收尾。
   if (hookError) {
-    await approvalEvents.emit('decided', ctx, { instance: await getInstance(ctx, inst.id), action })
+    const reason = hookReason(hookError)
+    const failedInst = await settleHookFailure(ctx, inst.id, reason)
+    await approvalEvents.emit('decided', ctx, { instance: failedInst, action })
     throw hookError
   }
   const done = await getInstance(ctx, inst.id)
