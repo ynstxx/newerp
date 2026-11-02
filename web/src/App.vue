@@ -8,6 +8,10 @@ import AppShell from './AppShell.vue'
 import LoginView from './views/LoginView.vue'
 import WorkbenchView from './views/WorkbenchView.vue'
 import PartyListView from './views/PartyListView.vue'
+import OpportunityListView from './views/OpportunityListView.vue'
+import ProjectListView from './views/ProjectListView.vue'
+import QuotationListView from './views/QuotationListView.vue'
+import ContractListView from './views/ContractListView.vue'
 import ComingSoonView from './views/ComingSoonView.vue'
 
 const booted = ref(false)
@@ -125,6 +129,11 @@ function onSearch(kw) {
   >
     <WorkbenchView v-if="active === 'workbench'" :key="viewKey" @open="openTab" />
     <PartyListView v-else-if="active === 'party'" :key="viewKey" />
+    <OpportunityListView v-else-if="active === 'opportunity'" :key="viewKey" />
+    <ProjectListView v-else-if="active === 'project'" :key="viewKey" />
+    <QuotationListView v-else-if="active === 'quotation'" :key="viewKey" />
+    <ContractListView v-else-if="active === 'contract'" :key="viewKey" />
+    <!-- 仍是占位的只剩「成员」（菜单里置灰，走不到这里，留作兜底） -->
     <ComingSoonView v-else :key="viewKey" :name="active" @open="openTab" />
   </AppShell>
 </template>

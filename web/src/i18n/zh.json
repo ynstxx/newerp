@@ -115,9 +115,123 @@
   "action": {
     "save": "保存",
     "cancel": "取消",
-    "saved": "已保存"
+    "saved": "已保存",
+    "edit": "编辑",
+    "advance": "推进",
+    "loadMore": "加载更多",
+    "noMore": "没有更多了"
   },
   "page": {
     "loaded": "已加载 {n} 条"
+  },
+  "common": {
+    "none": "—",
+    "required": "请填写必填项",
+    "total": "合计",
+    "noMatch": "没有匹配的记录",
+    "clientFilter": "搜索仅过滤已加载的记录"
+  },
+  "ostatus": {
+    "new": "新商机",
+    "following": "跟进中",
+    "won": "已赢单",
+    "lost": "已丢单"
+  },
+  "qstatus": {
+    "draft": "草稿",
+    "sent": "已发出",
+    "accepted": "已接受",
+    "rejected": "已拒绝"
+  },
+  "cstatus": {
+    "draft": "草稿",
+    "signed": "已签署"
+  },
+  "line": {
+    "no": "行号",
+    "item": "物料",
+    "spec": "规格",
+    "uom": "单位",
+    "qty": "数量",
+    "price": "单价",
+    "amount": "金额"
+  },
+  "oppty": {
+    "search": "搜索编码、名称或客户",
+    "new": "新建商机",
+    "edit": "编辑商机",
+    "code": "编码",
+    "name": "名称",
+    "party": "客户",
+    "partyPick": "选择客户",
+    "partyEmpty": "还没有客户主数据",
+    "owner": "负责人",
+    "ownerHint": "填成员 id，可留空",
+    "estAmount": "预估金额",
+    "expectedSignAt": "预计签约日",
+    "stage": "阶段",
+    "updatedAt": "更新时间",
+    "note": "备注",
+    "empty": "还没有商机，点右上角新建",
+    "hint": "商机赢单后自动立项",
+    "wonTip": "已赢单，并已自动生成项目"
+  },
+  "proj": {
+    "search": "搜索编码或名称",
+    "status": "状态",
+    "code": "编码",
+    "name": "名称",
+    "party": "客户",
+    "contractAmt": "合同额",
+    "pm": "项目经理",
+    "pmHint": "填成员 id，可留空",
+    "createdAt": "创建时间",
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "note": "备注",
+    "edit": "编辑项目",
+    "stages": "状态历史",
+    "historyEmpty": "还没有状态变更记录",
+    "autoNote": "项目由商机赢单自动生成，不在此处新建",
+    "empty": "还没有项目，商机赢单后会自动立项",
+    "hint": "签约请走合同签署"
+  },
+  "quo": {
+    "search": "搜索编码、项目或客户",
+    "status": "状态",
+    "code": "编码",
+    "project": "项目编码",
+    "version": "版本",
+    "party": "客户",
+    "amount": "金额",
+    "sentAt": "发出时间",
+    "detail": "查看明细",
+    "detailTitle": "报价明细",
+    "linesEmpty": "这版报价没有明细行",
+    "autoNote": "报价由方案 BOM 生成，不在此处新建",
+    "empty": "还没有报价，方案确认后可生成",
+    "hint": "报价由方案 BOM 快照生成"
+  },
+  "contract": {
+    "search": "搜索编号、名称、项目或客户",
+    "status": "状态",
+    "code": "编号",
+    "name": "名称",
+    "project": "项目编码",
+    "party": "客户",
+    "amount": "金额",
+    "signAt": "签署时间",
+    "detail": "查看明细",
+    "detailTitle": "合同明细",
+    "lines": "合同明细",
+    "linesEmpty": "没有明细行",
+    "terms": "合同条款",
+    "termsEmpty": "没有条款",
+    "sign": "签约",
+    "signConfirm": "确认签约？签约后合同不可更改，并会把对应项目置为「已签约」。",
+    "signed": "已签约",
+    "autoNote": "合同由已接受的报价生成，不在此处新建",
+    "empty": "还没有合同，报价被接受后可生成",
+    "hint": "签约会同时把项目置为已签约"
   }
 }
