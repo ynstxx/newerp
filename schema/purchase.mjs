@@ -184,6 +184,8 @@ export const tables = [
       { n: 'at', t: 'time', notNull: true },
       { n: 'created_at', t: 'time', notNull: true },
     ],
+    // 核销幂等：一笔 payment / 一份合同应收只能进账一次（并发下应用层检查会同时放行）
+    uniq: [['entry_type', 'ref_type', 'ref_id']],
     index: [['party_id'], ['project_id'], ['contract_id'], ['at', 'id'], ['created_at', 'id']],
     fk: [
       { cols: ['party_id'], ref: 'party' },
@@ -210,6 +212,8 @@ export const tables = [
       { n: 'at', t: 'time', notNull: true },
       { n: 'created_at', t: 'time', notNull: true },
     ],
+    // 同 ar_ledger：应付也按 (entry_type, ref_type, ref_id) 幂等
+    uniq: [['entry_type', 'ref_type', 'ref_id']],
     index: [['party_id'], ['project_id'], ['po_id'], ['subcontract_id'], ['at', 'id'], ['created_at', 'id']],
     fk: [
       { cols: ['party_id'], ref: 'party' },

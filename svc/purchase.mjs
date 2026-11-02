@@ -933,6 +933,10 @@ export async function createReceivable(ctx, input) {
   const now = new Date()
   const id = randomUUID()
   await withTx(ctx, async (tx) => {
+    // 幂等：同一合同只允许登记一次应收（双击/重试不该让余额翻倍）
+    if (await store.arExistsByRef(tx, { entryType: 'contract', refType: 'contract', refId: contractId })) {
+      throw new HttpError(errors.conflict, { reason: '该合同已登记过应收' })
+    }
     await store.arInsert(tx, {
       id,
       partyId: contract.party_id,
@@ -1153,7 +1157,8 @@ export async function createPayment(ctx, input) {
   const id = randomUUID()
 
   await withTx(ctx, async (tx) => {
-    if (!(await store.partyExists(tx, partyId))) {
+    // 锁客户行：同一客户的核销串行化，否则并发两笔都能看到「未结 100 元」（审计 B2）
+    if (!(await store.lockParty(tx, partyId))) {
       throw new HttpError(errors.badRequest, { fields: { partyId: 'not_found' } })
     }
     if (projectId && !(await store.projectExists(tx, projectId))) {

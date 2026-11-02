@@ -40,7 +40,6 @@
 | # | 缺口 | 现状 | 何时做 |
 |---|---|---|---|
 | 17 | **采购侧钩子失败没有 `onFailed`** | 施工的领料/变更已经实现 `onFailed`（事务回滚 + 单据落 failed）。采购 PO / 分包 / 进度款三条钩子还没实现：钩子抛错时审批实例回滚成 pending、单据停在原状态，需要人工重试 | 下一批：给 `PO_TRANSITIONS` 等加 `failed` 与重试边，再补三个 `onFailed` |
-| 18 | **台账核销无行锁、无幂等唯一键** | `ar_ledger`/`ap_ledger` 的超额校验是裸 `SUM` 后再插，并发两笔收款各看未结 100 元会各插 -100（余额负数）。`createReceivable` 重复 POST 会重复登记 | 需要迁移：`(tenant_id, entry_type, ref_type, ref_id)` 唯一索引 + 核销前 `lockParty` |
 | 19 | 不可达状态被 `allowed` 暴露 | `PO_TRANSITIONS.approved=['closed']`、`MATERIAL_ISSUE_TRANSITIONS.draft=[…,'cancelled']` 等边没有对应端点，前端按 `allowed` 渲染出点不动的按钮 | 补端点，或从 TRANSITIONS 删掉这些边 |
 | 20 | `invoice.status` 是死列（永远 `issued`） | 没有作废/红冲路径，也不返回 `allowed` | 做红冲时一起做 |
 | 21 | 在途审批缺唯一约束（`(doc_type, doc_id)` 只能一个 pending） | 靠应用层 `pendingInstanceByDoc` 读后写 + 各单据状态守卫拼出来 | 加部分唯一索引（PG `WHERE status='pending'`，MySQL 用生成列——注意生成列在禁用清单里，需重新评估） |

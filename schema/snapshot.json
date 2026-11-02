@@ -4638,7 +4638,14 @@
       "tenant_id",
       "id"
     ],
-    "uniq": [],
+    "uniq": [
+      [
+        "tenant_id",
+        "entry_type",
+        "ref_type",
+        "ref_id"
+      ]
+    ],
     "index": [
       [
         "tenant_id",
@@ -4789,7 +4796,14 @@
       "tenant_id",
       "id"
     ],
-    "uniq": [],
+    "uniq": [
+      [
+        "tenant_id",
+        "entry_type",
+        "ref_type",
+        "ref_id"
+      ]
+    ],
     "index": [
       [
         "tenant_id",

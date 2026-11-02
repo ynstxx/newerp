@@ -538,3 +538,43 @@ test('跨租户 404、未知字段 400、旧 version 409', async (t) => {
     400,
   )
 })
+
+test('台账幂等与并发：重复登记应收 409、并发核销不超未结余额', async (t) => {
+  if (!dbUp) return t.skip('需要数据库')
+  // 必须用**独立客户**：共享客户在前面用例里已经挂了一堆应收，未结额远大于 1000
+  const ledgerParty = await createParty(cookieA, slugA, `LEDGER-${run}`)
+  const projectId = await insertProject(`PR-LEDGER-${run}`)
+  const contractId = randomUUID()
+  const now = new Date()
+  await exec(
+    {},
+    `INSERT INTO contract (tenant_id, id, project_id, quotation_id, code, name, party_id, amount, sign_at, status, note, created_at, updated_at)
+     VALUES ($1, $2, $3, NULL, $4, $5, $6, $7, $8, 'signed', NULL, $8, $8)`,
+    [tenantAId, contractId, projectId, `CN-LEDGER-${run}`, '台账合同', ledgerParty, '1000.00', now],
+  )
+  // 先登记应收 1000
+  const ar1Res = await post('/api/ar-ledger', { contractId }, slugA, cookieA)
+  assert.equal(ar1Res.status, 201, JSON.stringify(await jsonOf(ar1Res)))
+
+  // 重复登记同一合同 → 409（双击/重试不能让余额翻倍）
+  const againRes = await post('/api/ar-ledger', { contractId }, slugA, cookieA)
+  const again = await jsonOf(againRes)
+  assert.equal(againRes.status, 409)
+  assert.match(String(again.error.details.reason ?? ''), /已登记/)
+
+  // 并发两笔各 800：未结只有 1000，必须一笔成功一笔 409（不能双负）
+  const [p1, p2] = await Promise.all([
+    post('/api/payments', { kind: 'ar', partyId: ledgerParty, amount: '800.00' }, slugA, cookieA),
+    post('/api/payments', { kind: 'ar', partyId: ledgerParty, amount: '800.00' }, slugA, cookieA),
+  ])
+  const okCount = [p1, p2].filter((r) => r.status === 201).length
+  const conflictCount = [p1, p2].filter((r) => r.status === 409).length
+  assert.equal(okCount, 1, `应只有一笔成功：${p1.status}/${p2.status}`)
+  assert.equal(conflictCount, 1, `另一笔应 409：${p1.status}/${p2.status}`)
+
+  // 余额不能为负
+  const balRes = await app.call('GET', `/t/${slugA}/api/ar-ledger/balance?partyId=${ledgerParty}`, undefined, cookieA)
+  const bal = await jsonOf(balRes)
+  assert.equal(balRes.status, 200)
+  assert.equal(Number(bal.balance), 200)
+})

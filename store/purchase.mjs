@@ -410,6 +410,18 @@ const AP_COLS =
  * @param {any} ctx
  * @param {{ id: string, partyId: string, projectId: string | null, contractId: string | null, invoiceId: string | null, entryType: string, amount: string, refType: string | null, refId: string | null, note: string | null, at: Date }} p
  */
+/**
+ * 某个来源是否已经入过账（幂等检查）
+ * @param {any} ctx @param {{ entryType: string, refType: string, refId: string }} f
+ */
+export const arExistsByRef = (ctx, f) =>
+  one(
+    ctx,
+    `SELECT id FROM ar_ledger WHERE $t AND entry_type = $1 AND ref_type = $2 AND ref_id = $3`,
+    [f.entryType, f.refType, f.refId],
+  )
+
+/** @param {any} ctx @param {any} p */
 export const arInsert = (ctx, p) =>
   exec(
     ctx,
@@ -624,6 +636,14 @@ export const costInsert = (ctx, p) =>
 // 只读、只带 $t，不碰别的域的表结构/状态机。
 /** @param {any} ctx @param {string} id */
 export const projectExists = (ctx, id) => one(ctx, `SELECT id FROM project WHERE $t AND id = $1`, [id])
+
+/** @param {any} ctx @param {string} id */
+/**
+ * 锁客户行：核销前必须先拿锁，否则并发两笔收款各读到「未结 100 元」，
+ * 各插一条 -100，余额变负（审计 B2）。
+ * @param {any} ctx @param {string} id
+ */
+export const lockParty = (ctx, id) => one(ctx, `SELECT id FROM party WHERE $t AND id = $1 FOR UPDATE`, [id])
 
 /** @param {any} ctx @param {string} id */
 export const partyExists = (ctx, id) => one(ctx, `SELECT id FROM party WHERE $t AND id = $1`, [id])
