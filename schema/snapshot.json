@@ -1,4 +1,199 @@
 {
+  "integration_conn": {
+    "name": "integration_conn",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "provider",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "corp_id",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "agent_id",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "secrets",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "enabled",
+        "t": "bool",
+        "notNull": true,
+        "default": "false"
+      },
+      {
+        "n": "last_sync_at",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true,
+        "default": "1"
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "provider"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "enabled"
+      ]
+    ],
+    "fk": []
+  },
+  "integration_map": {
+    "name": "integration_map",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "provider",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "external_type",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "external_id",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "local_id",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "synced_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "provider",
+        "external_type",
+        "external_id"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "provider",
+        "external_type",
+        "local_id"
+      ],
+      [
+        "tenant_id",
+        "provider",
+        "external_type"
+      ]
+    ],
+    "fk": []
+  },
+  "integration_sync_log": {
+    "name": "integration_sync_log",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "provider",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "action",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "counts",
+        "t": "json",
+        "notNull": false
+      },
+      {
+        "n": "error",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "tenant_id",
+        "provider",
+        "at"
+      ],
+      [
+        "tenant_id",
+        "at"
+      ]
+    ],
+    "fk": []
+  },
   "item": {
     "name": "item",
     "tenant": true,
