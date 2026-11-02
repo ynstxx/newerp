@@ -13,7 +13,8 @@ const ITEM_SPEC = {
   name: { type: 'string', required: true, max: 64 },
   spec: { type: 'string', max: 64 },
   category: { type: 'code', max: 64 },
-  baseUom: { type: 'code', required: true, max: 64 },
+  // 计量单位是自然语言（台/套/米/箱），不是 ASCII 业务编码 —— 用 code 类型会把中文全拒掉
+  baseUom: { type: 'string', required: true, max: 32 },
   status: { type: 'enum', values: items.ITEM_STATUSES },
   version: { type: 'int' },
 }

@@ -11,6 +11,7 @@ import * as client from './ai_client.mjs'
 import * as settings from './ai_settings.mjs'
 import * as tools from './ai_tools.mjs'
 import * as party from './party.mjs'
+import * as purchase from './purchase.mjs'
 import { allowedNext, assertTransition } from './transition.mjs'
 
 /**
@@ -305,6 +306,8 @@ export async function reject(ctx, draftId, reason) {
  */
 const APPLIERS = {
   create_party: { refType: 'party', apply: (ctx, payload) => party.createParty(ctx, payload) },
+  // 与人工下采购单完全同一个函数（DESIGN §12.2 步骤 3）
+  create_purchase_order: { refType: 'purchase_order', apply: (ctx, payload) => purchase.createPo(ctx, payload) },
 }
 
 /** 内部标记：事务会回滚，随后单独把草稿标成 failed（可修复重试） */

@@ -1,8 +1,11 @@
 import { need } from '../auth/perm.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
+import { centsOf, moneyOf, mulCents } from '../http/money.mjs'
 import { normCode } from '../http/validate.mjs'
 import * as partyStore from '../store/party.mjs'
 import * as party from './party.mjs'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /**
  * AI 工具注册表（DESIGN §12.1）—— 结构性禁止 AI 直接写库。
@@ -122,6 +125,17 @@ export function validateArgs(schema, raw) {
     } else if (spec.type === 'boolean') {
       if (typeof v !== 'boolean') bad[key] = 'type'
       else out[key] = v
+    } else if (spec.type === 'array') {
+      // 采购单行、BOM 行这类嵌套结构：逐元素用同一套规则校验
+      if (!Array.isArray(v)) {
+        bad[key] = 'type'
+      } else if (spec.minItems && v.length < spec.minItems) {
+        bad[key] = `minItems:${spec.minItems}`
+      } else if (spec.maxItems && v.length > spec.maxItems) {
+        bad[key] = `maxItems:${spec.maxItems}`
+      } else {
+        out[key] = spec.items ? v.map((el) => validateArgs(spec.items, el)) : v
+      }
     } else {
       bad[key] = 'schema'
     }
@@ -165,6 +179,32 @@ const CREATE_PARTY_SCHEMA = {
   type: 'object',
   properties: PARTY_PROPS,
   required: ['code', 'name', 'partyType'],
+  additionalProperties: false,
+}
+
+
+// ── write：采购单（M4 合并后补的；同样只有 draft，没有 run）───────────────
+const PO_LINE_SCHEMA = {
+  type: 'object',
+  properties: {
+    itemId: { type: 'string', description: '物料 uuid' },
+    qty: { type: 'string', description: '数量，如 "10"' },
+    price: { type: 'string', description: '单价，如 "5000.00"' },
+  },
+  required: ['itemId', 'qty', 'price'],
+  additionalProperties: false,
+}
+
+const CREATE_PO_SCHEMA = {
+  type: 'object',
+  properties: {
+    code: { type: 'string', description: '采购单号' },
+    partyId: { type: 'string', description: '供应商 uuid' },
+    projectId: { type: 'string', description: '关联项目 uuid（可空）' },
+    note: { type: 'string' },
+    lines: { type: 'array', items: PO_LINE_SCHEMA, minItems: 1 },
+  },
+  required: ['code', 'partyId', 'lines'],
   additionalProperties: false,
 }
 
@@ -281,3 +321,51 @@ export async function makeDraft(name, args, ctx) {
   }
   return { payload: out.payload, preview: out.preview }
 }
+
+/**
+ * 起草采购单。**只有 draft，没有 run** —— 落库只能走 ai_draft.apply() 里的人工审批。
+ */
+registerTool({
+  name: 'create_purchase_order',
+  level: 'write',
+  perm: 'purchase:create',
+  description: '起草采购单（只生成草稿，必须人工审批后才落库）',
+  schema: CREATE_PO_SCHEMA,
+  /**
+   * @param {any} ctx
+   * @param {unknown} args
+   */
+  async draft(ctx, args) {
+    const a = validateArgs(CREATE_PO_SCHEMA, args)
+    const lines = /** @type {any[]} */ (a.lines).map((l, i) => {
+      const itemId = String(l.itemId ?? '').trim()
+      if (!UUID.test(itemId)) throw new HttpError(errors.badRequest, { fields: { [`lines.${i}.itemId`]: 'uuid' } })
+      const qty = centsOf(String(l.qty), `lines.${i}.qty`)
+      const price = centsOf(String(l.price), `lines.${i}.price`)
+      if (qty <= 0) throw new HttpError(errors.badRequest, { fields: { [`lines.${i}.qty`]: 'min:>0' } })
+      if (price < 0) throw new HttpError(errors.badRequest, { fields: { [`lines.${i}.price`]: 'min:0' } })
+      return { itemId, qty: moneyOf(qty), price: moneyOf(price), amount: moneyOf(mulCents(qty, price)) }
+    })
+    const total = lines.reduce((sum, l) => sum + centsOf(l.amount), 0)
+    const payload = {
+      code: normCode(a.code),
+      partyId: String(a.partyId).trim(),
+      projectId: a.projectId ? String(a.projectId).trim() : null,
+      note: a.note ? String(a.note) : null,
+      // 行金额由 createPo 自己用分算法重算，payload 里不塞 amount
+      // （apply 时会重跑一遍 draft()，多一个字段就会被 schema 判未知字段）
+      lines: lines.map((l) => ({ itemId: l.itemId, qty: l.qty, price: l.price })),
+    }
+    return {
+      payload,
+      preview: {
+        单号: payload.code,
+        供应商: payload.partyId,
+        行数: lines.length,
+        合计: moneyOf(total),
+        明细: lines.map((l) => `${l.itemId} × ${l.qty} @ ${l.price} = ${l.amount}`),
+      },
+    }
+  },
+})
+

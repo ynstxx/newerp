@@ -164,6 +164,11 @@ test('工具契约：write 只有 draft()，结构上没有 run；read 才可执
   if (!dbUp) return t.skip('需要数据库')
   const writeTool = getTool('create_party')
   const readTool = getTool('read_party_list')
+  // M4 合并后补的采购工具同样只有 draft()
+  const poTool = getTool('create_purchase_order')
+  assert.ok(poTool, '采购写工具应已注册')
+  assert.equal(poTool.level, 'write')
+  assert.equal('run' in poTool, false, 'create_purchase_order 也不能有 run')
   assert.ok(writeTool)
   assert.ok(readTool)
   assert.equal(writeTool.level, 'write')
@@ -393,4 +398,58 @@ test('跨租户 404；未知字段 400', async (t) => {
 
   const badReject = await call('POST', `/t/${slugA}/api/ai/drafts/${draftId}/reject`, {})
   assert.equal(badReject.status, 400)
+})
+
+test('AI 起草采购单：草稿 → 人审 → 落库成真正的 PO', async (t) => {
+  if (!dbUp) return t.skip('需要数据库')
+
+  // 前置：供应商 + 物料
+  const partyRes = await call('POST', `/t/${slugA}/api/parties`, {
+    code: `S${Date.now().toString(36)}`,
+    name: 'AI 供应商',
+    partyType: 'supplier',
+  })
+  assert.equal(partyRes.status, 201)
+  const supplier = await jsonOf(partyRes)
+
+  const itemRes = await call('POST', `/t/${slugA}/api/items`, {
+    code: `I${Date.now().toString(36)}`,
+    name: '交换机',
+    baseUom: '台',
+  })
+  const itemBody = await jsonOf(itemRes)
+  assert.equal(itemRes.status, 201, JSON.stringify(itemBody))
+  const item = itemBody
+
+  const poCode = `POAI${Date.now().toString(36)}`
+  fake.queue = [
+    {
+      tool: 'create_purchase_order',
+      args: {
+        code: poCode,
+        partyId: supplier.id,
+        lines: [{ itemId: item.id, qty: '10', price: '5000.00' }],
+      },
+    },
+  ]
+
+  const chat = await call('POST', `/t/${slugA}/api/ai/chat`, { messages: [{ role: 'user', content: '给这个供应商开 5 万采购单买 10 台交换机' }] })
+  const chatBody = await jsonOf(chat)
+  assert.equal(chat.status, 201, JSON.stringify(chatBody))
+  const draft = chatBody.draft
+  assert.equal(draft.toolName, 'create_purchase_order')
+  // 预览里合计是 50000.00（分算法，不是浮点）
+  assert.match(JSON.stringify(draft.preview), /50000\.00/)
+
+  // 审批通过前不能落库
+  assert.equal(await one(ctxA(), `SELECT id FROM purchase_order WHERE $t AND code = $1`, [poCode.toUpperCase()]), null)
+
+  assert.equal((await call('POST', `/t/${slugA}/api/ai/drafts/${draft.id}/approve`, {})).status, 200)
+  const applied = await call('POST', `/t/${slugA}/api/ai/drafts/${draft.id}/apply`)
+  assert.equal(applied.status, 200, JSON.stringify(await jsonOf(applied)))
+
+  // 业务编码统一大写落库（normCode），查询也要用大写
+  const po = await one(ctxA(), `SELECT id, amount, status FROM purchase_order WHERE $t AND code = $1`, [poCode.toUpperCase()])
+  assert.ok(po, '审批通过后应落成真的采购单')
+  assert.equal(String(po.amount), '50000.00')
 })
