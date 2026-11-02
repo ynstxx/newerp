@@ -30,7 +30,8 @@ import { assertId, mustProject } from './work.mjs'
 export const MATERIAL_ISSUE_DOC_TYPE = 'material_issue'
 
 export const MATERIAL_ISSUE_TRANSITIONS = /** @type {const} */ ({
-  draft: ['pending', 'cancelled'],
+  // 暂时没有取消端点，先不暴露 cancelled
+  draft: ['pending'],
   pending: ['issued', 'rejected', 'failed'],
   issued: [],
   rejected: [],

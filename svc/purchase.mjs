@@ -31,7 +31,8 @@ export const PO_TRANSITIONS = /** @type {const} */ ({
   rejected: ['pending'],
   // 钩子失败（台账入账抛错）→ failed；修好后可重新提交审批
   failed: ['pending'],
-  approved: ['closed'],
+  // 暂时没有 close 端点，别让 allowed 渲染出点不动的按钮
+  approved: [],
   closed: [],
 })
 export const PO_STATUSES = Object.keys(PO_TRANSITIONS)
@@ -41,7 +42,8 @@ export const SUB_TRANSITIONS = /** @type {const} */ ({
   pending: ['approved', 'rejected', 'failed'],
   rejected: ['pending'],
   failed: ['pending'],
-  approved: ['closed'],
+  // 暂时没有 close 端点，别让 allowed 渲染出点不动的按钮
+  approved: [],
   closed: [],
 })
 export const SUB_STATUSES = Object.keys(SUB_TRANSITIONS)

@@ -227,6 +227,10 @@ export async function updateItem(ctx, id, patch) {
 export async function deleteItem(ctx, id) {
   const cur = await store.itemById(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
+  // 有引用就 409（别让外键错误冒成 500，两库错误码还不一样）
+  if ((await store.itemRefs(ctx, id)) > 0) {
+    throw new HttpError(errors.conflict, { reason: '物料已被库存或流水引用，不能删除（可改为停用）' })
+  }
   const now = new Date()
   await withTx(ctx, async (tx) => {
     await store.itemRemove(tx, id)
@@ -337,6 +341,9 @@ export async function updateWarehouse(ctx, id, patch) {
 export async function deleteWarehouse(ctx, id) {
   const cur = await store.warehouseById(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
+  if ((await store.warehouseRefs(ctx, id)) > 0) {
+    throw new HttpError(errors.conflict, { reason: '仓库已被库存或流水引用，不能删除（可改为停用）' })
+  }
   const now = new Date()
   await withTx(ctx, async (tx) => {
     await store.warehouseRemove(tx, id)

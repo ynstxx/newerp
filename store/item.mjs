@@ -77,6 +77,31 @@ export const itemUpdate = (ctx, p) =>
 /** @param {any} ctx @param {string} id */
 export const itemRemove = (ctx, id) => exec(ctx, `DELETE FROM item WHERE $t AND id = $1`, [id])
 
+/**
+ * 删除前的引用检查：被库存/流水/序列号/价格本/采购行等引用过就不能物理删除。
+ * 不做这步的话，外键错误会冒成 500，而且两库错误码不同（PG 23503 / MySQL 1451），前端没法区分。
+ * @param {any} ctx @param {string} id
+ */
+export async function itemRefs(ctx, id) {
+  const rows = await Promise.all([
+    one(ctx, `SELECT COUNT(*) AS n FROM stock_bin WHERE $t AND item_id = $1`, [id]),
+    one(ctx, `SELECT COUNT(*) AS n FROM stock_move WHERE $t AND item_id = $1`, [id]),
+    one(ctx, `SELECT COUNT(*) AS n FROM item_sn WHERE $t AND item_id = $1`, [id]),
+    one(ctx, `SELECT COUNT(*) AS n FROM price_book WHERE $t AND item_id = $1`, [id]),
+  ])
+  return rows.reduce((sum, r) => sum + Number(r?.n ?? 0), 0)
+}
+
+/** 仓库被库存/流水引用过就不能删（同上）
+ * @param {any} ctx @param {string} id */
+export async function warehouseRefs(ctx, id) {
+  const rows = await Promise.all([
+    one(ctx, `SELECT COUNT(*) AS n FROM stock_bin WHERE $t AND warehouse_id = $1`, [id]),
+    one(ctx, `SELECT COUNT(*) AS n FROM stock_move WHERE $t AND warehouse_id = $1`, [id]),
+  ])
+  return rows.reduce((sum, r) => sum + Number(r?.n ?? 0), 0)
+}
+
 // ── item_uom ────────────────────────────────────────────────────────────────
 const UOM_COLS = 'id, item_id, uom, ratio'
 

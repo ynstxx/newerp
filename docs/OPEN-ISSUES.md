@@ -39,7 +39,6 @@
 
 | # | 缺口 | 现状 | 何时做 |
 |---|---|---|---|
-| 19 | 不可达状态被 `allowed` 暴露 | `PO_TRANSITIONS.approved=['closed']`、`MATERIAL_ISSUE_TRANSITIONS.draft=[…,'cancelled']` 等边没有对应端点，前端按 `allowed` 渲染出点不动的按钮 | 补端点，或从 TRANSITIONS 删掉这些边 |
 | 20 | `invoice.status` 是死列（永远 `issued`） | 没有作废/红冲路径，也不返回 `allowed` | 做红冲时一起做 |
 | 21 | 在途审批缺唯一约束（`(doc_type, doc_id)` 只能一个 pending） | 靠应用层 `pendingInstanceByDoc` 读后写 + 各单据状态守卫拼出来 | 加部分唯一索引（PG `WHERE status='pending'`，MySQL 用生成列——注意生成列在禁用清单里，需重新评估） |
 | 22 | 编号空洞 | `code_seq` 自增独立提交，单据随后回滚会留下号码空洞 | 可接受（发票类单据需要连续号时才处理） |
@@ -59,7 +58,6 @@
 
 | # | 缺口 | 现状 | 何时做 |
 |---|---|---|---|
-| 29 | 删除物料/仓库不做引用检查（审计 B8） | 带引用删除会冒外键错误成 500（两库错误码还不同）；同仓 `store/service_contract.mjs` 的 `refs()` 已有正确范式 | 给 `deleteItem`/`warehouseRemove` 照抄 `refs()`，有引用返回 409 |
 | 30 | `notify_outbox` 的领取查询用不上索引（审计 B11） | 三个索引都以 `tenant_id` 打头，worker 是跨租户查 `WHERE status/next_retry_at`，两库都会退化扫描 | 给 outbox 加 `(status, next_retry_at)` 全局索引（生成器需支持非租户前缀的附加索引） |
 | 31 | `svc/service_contract` 的 amount 未归一（审计 B9） | 靠 `api/service.mjs` 的 `moneyOfInput` 兜；被内部调用（AI 工具/其它 svc）绕过 api 时，三位小数会直接进 numeric | svc 入口统一 `moneyOf(centsOf(v))` |
 

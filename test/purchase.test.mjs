@@ -280,7 +280,8 @@ test('未审批不能收货；审批通过后收货入库并留 stock_move（10 
   assert.equal(await approveDoc(slugA, created.id), 1)
   const poApproved = await jsonOf(await get(`/api/purchase-orders/${created.id}`, slugA))
   assert.equal(poApproved.status, 'approved')
-  assert.deepEqual(poApproved.allowed, ['closed'])
+  // approved 目前是终态：没有 close 端点，allowed 保持空（以前暴露了走不到的 'closed'）
+  assert.deepEqual(poApproved.allowed, [])
 
   // 收货 → 库存 +10、movement 一条、成本 15 万进应付
   const rc = await post('/api/goods-receipts', {

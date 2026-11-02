@@ -298,3 +298,31 @@ test('跨租户一律 404；未知字段 400；price_book 用 money.mjs 解析',
   assert.equal((await get(`/api/stock/sn/NOPE-${randomUUID()}`, slugB, cookieB)).status, 404)
   assert.equal((await get('/api/items/not-a-uuid', slugA)).status, 404)
 })
+
+test('删除引用检查：被库存/流水引用的物料与仓库 → 409（不是 500）', async (t) => {
+  if (!dbUp) return t.skip('需要数据库')
+  const item = (await newItem(cookieA, slugA, `DEL${++seq}`)).id
+  const wh = (await newWarehouse(cookieA, slugA, `DELW${++seq}`)).id
+  const inb = await post(
+    '/api/stock/moves',
+    { warehouseId: wh, itemId: item, qty: '5', dir: 'in', moveType: 'init', unitCost: '10.00' },
+    slugA,
+    cookieA,
+  )
+  assert.equal(inb.status, 201, JSON.stringify(await jsonOf(inb)))
+
+  // 有引用 → 409（不是外键错误冒成的 500），原因可读
+  const delItem = await app.call('DELETE', `/t/${slugA}/api/items/${item}`, undefined, cookieA)
+  const delItemBody = await jsonOf(delItem)
+  assert.equal(delItem.status, 409, JSON.stringify(delItemBody))
+  assert.match(String(delItemBody.error.details.reason ?? ''), /引用/)
+
+  const delWh = await app.call('DELETE', `/t/${slugA}/api/warehouses/${wh}`, undefined, cookieA)
+  const delWhBody = await jsonOf(delWh)
+  assert.equal(delWh.status, 409, JSON.stringify(delWhBody))
+  assert.match(String(delWhBody.error.details.reason ?? ''), /引用/)
+
+  // 没被引用时可以删
+  const fresh = (await newItem(cookieA, slugA, `DEL2${++seq}`)).id
+  assert.equal((await app.call('DELETE', `/t/${slugA}/api/items/${fresh}`, undefined, cookieA)).status, 200)
+})

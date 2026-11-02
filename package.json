@@ -11,7 +11,8 @@
     "start": "node cmd/server.mjs",
     "dev": "node --watch cmd/server.mjs",
     "test": "node --test --test-concurrency=1",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "node cmd/demo-seed.mjs"
   },
   "dependencies": {
     "mysql2": "^3.11.0",

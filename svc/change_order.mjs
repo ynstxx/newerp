@@ -22,7 +22,8 @@ import { assertId, mustProject } from './work.mjs'
 export const CHANGE_ORDER_DOC_TYPE = 'change_order'
 
 export const CHANGE_ORDER_TRANSITIONS = /** @type {const} */ ({
-  draft: ['pending', 'cancelled'],
+  // 暂时没有取消端点，先不暴露 cancelled
+  draft: ['pending'],
   pending: ['applied', 'rejected', 'failed'],
   applied: [],
   rejected: [],
