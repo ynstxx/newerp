@@ -63,3 +63,10 @@
 | 29 | 删除物料/仓库不做引用检查（审计 B8） | 带引用删除会冒外键错误成 500（两库错误码还不同）；同仓 `store/service_contract.mjs` 的 `refs()` 已有正确范式 | 给 `deleteItem`/`warehouseRemove` 照抄 `refs()`，有引用返回 409 |
 | 30 | `notify_outbox` 的领取查询用不上索引（审计 B11） | 三个索引都以 `tenant_id` 打头，worker 是跨租户查 `WHERE status/next_retry_at`，两库都会退化扫描 | 给 outbox 加 `(status, next_retry_at)` 全局索引（生成器需支持非租户前缀的附加索引） |
 | 31 | `svc/service_contract` 的 amount 未归一（审计 B9） | 靠 `api/service.mjs` 的 `moneyOfInput` 兜；被内部调用（AI 工具/其它 svc）绕过 api 时，三位小数会直接进 numeric | svc 入口统一 `moneyOf(centsOf(v))` |
+
+## 第 4 波审计后新增（守卫硬化留下的）
+
+| # | 缺口 | 现状 | 何时做 |
+|---|---|---|---|
+| 32 | 守卫的「同函数体出现 `isMember`」是文本匹配 | 同文件/同函数里一次无关的 `isMember` 调用就能给 `auth_user` 写入放行 | 升级成 AST 分析（或至少限定「同一个 SQL 字面量前后 200 字符内」） |
+| 33 | `store/user.mjs:setStatus` 按 email 裸写账号状态 | 已在代码注释里写死「平台级操作，只该由 CLI 调」并进白名单；开放成 HTTP 端点前必须补平台管理员权限点 | 做平台管理后台时 |

@@ -13,7 +13,12 @@ export const byId = (ctx, id) => one(ctx, `SELECT ${COLS} FROM auth_user WHERE i
 export const pending = (ctx) =>
   q(ctx, `SELECT id, email, display_name, created_at FROM auth_user WHERE status = 'pending' ORDER BY created_at`, [])
 
-/** @param {any} ctx @param {string} email @param {string} status */
+/**
+ * 平台级操作：按邮箱改账号状态（放行/停用）。**没有成员校验**，
+ * 只该由平台管理员 CLI（`cmd/user.mjs approve|disable`）调用。
+ * 若将来开放成 HTTP 端点，必须先加「平台管理员」权限点，否则等于允许越权停用别家账号。
+ * @param {any} ctx @param {string} email @param {string} status
+ */
 export const setStatus = (ctx, email, status) =>
   exec(ctx, `UPDATE auth_user SET status = $1 WHERE email = $2`, [status, email])
 
