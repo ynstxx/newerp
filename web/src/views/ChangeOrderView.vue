@@ -13,7 +13,7 @@ import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { fmtDate, fmtDateTime, money, shortId } from '../format.js'
 
-const STATUSES = ['draft', 'pending', 'applied', 'rejected', 'failed', 'cancelled']
+const STATUSES = computed(() => dict('changeOrderStatus'))
 
 const items = ref([])
 const cursor = ref('')

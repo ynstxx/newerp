@@ -56,6 +56,14 @@ async function pickAndLoad(slug) {
   } catch {
     state.members = []
   }
+  // 数据字典：枚举值只从服务端取，前端不再硬编码
+  try {
+    const meta = await api.get('/api/meta/dicts')
+    state.dicts = meta.dicts ?? {}
+    state.dictPrefix = meta.labelPrefix ?? {}
+  } catch {
+    state.dicts = {}
+  }
 }
 
 async function loadMe() {

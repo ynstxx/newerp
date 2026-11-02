@@ -12,7 +12,7 @@ import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { fmtDate, money, shortId } from '../format.js'
 
-const STATUSES = ['draft', 'signed']
+const STATUSES = computed(() => dict('contractStatus'))
 
 const items = ref([])
 const cursor = ref('')

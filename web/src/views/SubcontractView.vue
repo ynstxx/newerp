@@ -8,11 +8,11 @@ import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
-import { state } from '../state.js'
+import { state, dict } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { fmtDate, money, shortId } from '../format.js'
 
-const STATUSES = ['draft', 'pending', 'approved', 'rejected', 'closed']
+const STATUSES = computed(() => dict('subStatus'))
 
 const items = ref([])
 const cursor = ref('')

@@ -13,7 +13,7 @@ import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { dateInput, fmtDate, fmtDateTime, memberName, shortId } from '../format.js'
 
-const STATUSES = ['待受理', '已派工', '处理中', '待验证', '已关闭', '挂起']
+const STATUSES = computed(() => dict('ticketStatus'))
 const PRIORITIES = ['low', 'normal', 'high', 'urgent']
 
 const items = ref([])

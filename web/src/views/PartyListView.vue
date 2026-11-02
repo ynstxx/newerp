@@ -4,7 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, fieldErrors } from '../api.js'
 import { Search } from '@element-plus/icons-vue'
 import { t } from '../i18n.js'
-import { state } from '../state.js'
+import { state, dict, dictKey } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import PartyForm from './PartyForm.vue'
 
@@ -86,7 +86,7 @@ onMounted(refresh)
         </template>
       </el-input>
       <el-select v-model="partyType" clearable :placeholder="t('party.type')" class="type" @change="refresh">
-        <el-option v-for="k in ['customer', 'supplier', 'both']" :key="k" :value="k" :label="t(`type.${k}`)" />
+        <el-option v-for="k in dict('partyType')" :key="k" :value="k" :label="t(dictKey('partyType', k))" />
       </el-select>
     </template>
 

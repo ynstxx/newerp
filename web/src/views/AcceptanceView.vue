@@ -9,12 +9,12 @@ import { ElMessage } from 'element-plus'
 import { ArrowDown, Search } from '@element-plus/icons-vue'
 import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
-import { state } from '../state.js'
+import { state, dict } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { fmtDateTime, shortId } from '../format.js'
 
-const STATUSES = ['draft', 'passed', 'failed']
-const TYPES = ['hidden', 'overall']
+const STATUSES = computed(() => dict('acceptanceStatus'))
+const TYPES = computed(() => dict('acceptanceType'))
 const RESULTS = ['pass', 'fail', 'na']
 
 const items = ref([])

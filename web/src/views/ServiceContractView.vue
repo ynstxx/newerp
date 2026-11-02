@@ -8,11 +8,11 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
-import { state } from '../state.js'
+import { state, dict } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { dateInput, fmtDate, money, shortId } from '../format.js'
 
-const STATUSES = ['active', 'expired', 'terminated']
+const STATUSES = computed(() => dict('serviceContractStatus'))
 
 const items = ref([])
 const cursor = ref('')

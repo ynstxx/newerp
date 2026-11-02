@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api, fieldErrors } from '../api.js'
 import { t } from '../i18n.js'
+import { dict, dictKey } from '../state.js'
 
 const props = defineProps({
   /** @type {{ id: string, version: number } | null} */
@@ -65,12 +66,12 @@ async function save() {
       </el-form-item>
       <el-form-item :label="t('party.type')" required>
         <el-select v-model="form.partyType" style="width: 100%" data-test="f-type">
-          <el-option v-for="k in ['customer', 'supplier', 'both']" :key="k" :value="k" :label="t(`type.${k}`)" />
+          <el-option v-for="k in dict('partyType')" :key="k" :value="k" :label="t(dictKey('partyType', k))" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('party.status')">
         <el-select v-model="form.status" style="width: 100%">
-          <el-option v-for="k in ['active', 'disabled']" :key="k" :value="k" :label="t(`status.${k}`)" />
+          <el-option v-for="k in dict('partyStatus')" :key="k" :value="k" :label="t(dictKey('partyStatus', k))" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('party.taxNo')">

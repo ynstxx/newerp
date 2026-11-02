@@ -9,11 +9,11 @@ import { ElMessage } from 'element-plus'
 import { ArrowDown, Search } from '@element-plus/icons-vue'
 import { api, fieldErrors } from '../api.js'
 import { t, tp } from '../i18n.js'
-import { state } from '../state.js'
+import { state, dict } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { dateInput, fmtDate, fmtDateTime, money, shortId, memberName } from '../format.js'
 
-const STATUSES = ['approved', 'designing', 'quoting', 'signed', 'terminated', 'draft']
+const STATUSES = computed(() => dict('projectStatus'))
 
 const items = ref([])
 const cursor = ref('')

@@ -12,7 +12,7 @@ import { state } from '../state.js'
 import PageTemplate from '../components/PageTemplate.vue'
 import { fmtDateTime, memberName, shortId } from '../format.js'
 
-const STATUSES = ['draft', 'pending', 'approved', 'applied', 'rejected', 'failed']
+const STATUSES = computed(() => dict('aiDraftStatus'))
 
 const items = ref([])
 const cursor = ref('')
