@@ -8,6 +8,8 @@ const target = process.env.VITE_API_TARGET ?? 'http://127.0.0.1:8099'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    // 操作机只在局域网内，dev server 也必须对外监听（默认只听 localhost）
+    host: true,
     port: 5173,
     proxy: {
       '/api': target,
