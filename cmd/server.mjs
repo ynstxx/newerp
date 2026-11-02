@@ -8,6 +8,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { health } from '../api/health.mjs'
 import { login, logout, me } from '../api/auth.mjs'
 import { createInvite, register, registerInfo } from '../api/registration.mjs'
+import * as party from '../api/party.mjs'
 import * as session from '../auth/session.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
@@ -19,6 +20,11 @@ router.get('/api/auth/register-info', registerInfo)
 router.post('/api/auth/register', register)
 router.post('/api/invites', createInvite)
 router.get('/api/me', me)
+router.get('/api/parties', party.list)
+router.post('/api/parties', party.create)
+router.get('/api/parties/:id', party.get)
+router.patch('/api/parties/:id', party.update)
+router.del('/api/parties/:id', party.remove)
 
 /** @type {import('../http/middleware.mjs').Middleware} */
 async function authSession(ctx, next) {

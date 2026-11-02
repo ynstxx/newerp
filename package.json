@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node cmd/server.mjs",
     "dev": "node --watch cmd/server.mjs",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=1",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
