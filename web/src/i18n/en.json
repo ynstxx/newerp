@@ -116,5 +116,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "saved": "Saved"
+  },
+  "page": {
+    "loaded": "{n} loaded"
   }
 }

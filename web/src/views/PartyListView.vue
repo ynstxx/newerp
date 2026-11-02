@@ -5,6 +5,7 @@ import { api, fieldErrors } from '../api.js'
 import { Search } from '@element-plus/icons-vue'
 import { t } from '../i18n.js'
 import { state } from '../state.js'
+import PageTemplate from '../components/PageTemplate.vue'
 import PartyForm from './PartyForm.vue'
 
 const items = ref([])
@@ -68,13 +69,9 @@ onMounted(refresh)
 </script>
 
 <template>
-  <section class="erp-card">
-    <div class="head">
-      <div class="head-text">
-        <span class="erp-card-title">{{ t('party.title') }}</span>
-        <span class="erp-weak">{{ t('party.hint') }}</span>
-      </div>
-      <div class="spacer" />
+  <PageTemplate>
+    <!-- 左上：搜索与筛选 -->
+    <template #search>
       <el-input
         v-model="keyword"
         :placeholder="t('party.search')"
@@ -91,9 +88,14 @@ onMounted(refresh)
       <el-select v-model="partyType" clearable :placeholder="t('party.type')" class="type" @change="refresh">
         <el-option v-for="k in ['customer', 'supplier', 'both']" :key="k" :value="k" :label="t(`type.${k}`)" />
       </el-select>
-      <el-button type="primary" data-test="new" @click="openNew">{{ t('party.new') }}</el-button>
-    </div>
+    </template>
 
+    <!-- 右上：功能按钮 -->
+    <template #actions>
+      <el-button type="primary" data-test="new" @click="openNew">{{ t('party.new') }}</el-button>
+    </template>
+
+    <!-- 中间：列表框 -->
     <el-table :data="items" v-loading="loading" border empty-text=" " data-test="table" @row-dblclick="openEdit">
       <el-table-column prop="code" :label="t('party.code')" width="150">
         <template #default="{ row }">
@@ -132,32 +134,23 @@ onMounted(refresh)
       </template>
     </el-table>
 
-    <div class="foot">
+    <!-- 左下：提示文本 -->
+    <template #hint>
+      {{ t('party.hint') }} · {{ t('page.loaded', { n: items.length }) }}
+      {{ cursor ? '' : ` · ${t('party.noMore')}` }}
+    </template>
+
+    <!-- 右下：分页 -->
+    <template #pager>
       <el-button v-if="cursor" :loading="loading" @click="load()">{{ t('party.loadMore') }}</el-button>
       <span v-else-if="items.length" class="erp-weak">{{ t('party.noMore') }}</span>
-    </div>
+    </template>
 
     <PartyForm v-model="drawer" :party="editing" @saved="refresh" />
-  </section>
+  </PageTemplate>
 </template>
 
 <style scoped>
-.head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.head-text {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-.spacer {
-  flex: 1;
-}
 .search {
   width: 220px;
 }
@@ -171,10 +164,6 @@ onMounted(refresh)
 }
 .name {
   color: var(--erp-text);
-}
-.foot {
-  margin-top: 12px;
-  text-align: center;
 }
 @media (max-width: 900px) {
   .search,
