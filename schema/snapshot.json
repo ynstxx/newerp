@@ -1,30 +1,40 @@
 {
-  "auth_user": {
-    "name": "auth_user",
-    "tenant": false,
+  "item": {
+    "name": "item",
+    "tenant": true,
     "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
       {
         "n": "id",
         "t": "uuid",
         "notNull": true
       },
       {
-        "n": "email",
+        "n": "code",
         "t": "code",
         "notNull": true
       },
       {
-        "n": "pwd_hash",
-        "t": "text",
+        "n": "name",
+        "t": "code",
         "notNull": true
       },
       {
-        "n": "pwd_salt",
-        "t": "text",
-        "notNull": true
+        "n": "spec",
+        "t": "code",
+        "notNull": false
       },
       {
-        "n": "display_name",
+        "n": "category",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "base_uom",
         "t": "code",
         "notNull": true
       },
@@ -34,33 +44,131 @@
         "notNull": true
       },
       {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
         "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
         "t": "time",
         "notNull": true
       }
     ],
     "pk": [
+      "tenant_id",
       "id"
     ],
     "uniq": [
       [
-        "email"
+        "tenant_id",
+        "code"
       ]
     ],
-    "index": [],
+    "index": [
+      [
+        "tenant_id",
+        "name"
+      ],
+      [
+        "tenant_id",
+        "category",
+        "status"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
     "fk": []
   },
-  "org_tenant": {
-    "name": "org_tenant",
-    "tenant": false,
+  "item_uom": {
+    "name": "item_uom",
+    "tenant": true,
     "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
       {
         "n": "id",
         "t": "uuid",
         "notNull": true
       },
       {
-        "n": "slug",
+        "n": "item_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "uom",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ratio",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "item_id",
+        "uom"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "item_id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "item_id"
+        ],
+        "ref": "item",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "warehouse": {
+    "name": "warehouse",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "code",
         "t": "code",
         "notNull": true
       },
@@ -75,44 +183,13 @@
         "notNull": true
       },
       {
-        "n": "plan",
-        "t": "code",
-        "notNull": true
-      },
-      {
-        "n": "join_policy",
-        "t": "code",
+        "n": "version",
+        "t": "int",
         "notNull": true
       },
       {
         "n": "created_at",
         "t": "time",
-        "notNull": true
-      }
-    ],
-    "pk": [
-      "id"
-    ],
-    "uniq": [
-      [
-        "slug"
-      ]
-    ],
-    "index": [],
-    "fk": []
-  },
-  "platform_settings": {
-    "name": "platform_settings",
-    "tenant": false,
-    "cols": [
-      {
-        "n": "setting_key",
-        "t": "code",
-        "notNull": true
-      },
-      {
-        "n": "setting_value",
-        "t": "text",
         "notNull": true
       },
       {
@@ -122,40 +199,175 @@
       }
     ],
     "pk": [
-      "setting_key"
+      "tenant_id",
+      "id"
     ],
-    "uniq": [],
-    "index": [],
+    "uniq": [
+      [
+        "tenant_id",
+        "code"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
     "fk": []
   },
-  "login_attempt": {
-    "name": "login_attempt",
-    "tenant": false,
+  "stock_bin": {
+    "name": "stock_bin",
+    "tenant": true,
     "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
       {
         "n": "id",
         "t": "uuid",
         "notNull": true
       },
       {
-        "n": "kind",
+        "n": "warehouse_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "item_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "qty",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "warehouse_id",
+        "item_id"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "item_id",
+        "warehouse_id"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "warehouse_id"
+        ],
+        "ref": "warehouse",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "item_id"
+        ],
+        "ref": "item",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "stock_move": {
+    "name": "stock_move",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "warehouse_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "item_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "qty",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "dir",
         "t": "code",
         "notNull": true
       },
       {
-        "n": "ident",
+        "n": "move_type",
         "t": "code",
         "notNull": true
       },
       {
-        "n": "ip",
+        "n": "ref_type",
         "t": "code",
         "notNull": false
       },
       {
-        "n": "ok",
-        "t": "bool",
-        "notNull": true
+        "n": "ref_id",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "sn_list",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "unit_cost",
+        "t": "money",
+        "notNull": false
+      },
+      {
+        "n": "note",
+        "t": "text",
+        "notNull": false
       },
       {
         "n": "at",
@@ -164,53 +376,99 @@
       }
     ],
     "pk": [
+      "tenant_id",
       "id"
     ],
     "uniq": [],
     "index": [
       [
-        "ident",
+        "tenant_id",
+        "warehouse_id",
+        "item_id",
         "at"
       ],
       [
-        "ip",
+        "tenant_id",
+        "ref_type",
+        "ref_id"
+      ],
+      [
+        "tenant_id",
+        "at",
+        "id"
+      ],
+      [
+        "tenant_id",
         "at"
       ]
     ],
-    "fk": []
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "warehouse_id"
+        ],
+        "ref": "warehouse",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "item_id"
+        ],
+        "ref": "item",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
   },
-  "auth_session": {
-    "name": "auth_session",
-    "tenant": false,
+  "item_sn": {
+    "name": "item_sn",
+    "tenant": true,
     "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
       {
         "n": "id",
         "t": "uuid",
         "notNull": true
       },
       {
-        "n": "user_id",
+        "n": "item_id",
         "t": "uuid",
         "notNull": true
       },
       {
-        "n": "tenant_id",
-        "t": "uuid",
-        "notNull": false
-      },
-      {
-        "n": "expires_at",
-        "t": "time",
+        "n": "sn",
+        "t": "code",
         "notNull": true
       },
       {
-        "n": "ip",
+        "n": "warehouse_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ref_type",
         "t": "code",
         "notNull": false
       },
       {
-        "n": "ua",
-        "t": "text",
+        "n": "ref_id",
+        "t": "code",
         "notNull": false
       },
       {
@@ -220,18 +478,138 @@
       }
     ],
     "pk": [
+      "tenant_id",
+      "id"
+    ],
+    "uniq": [
+      [
+        "tenant_id",
+        "sn"
+      ]
+    ],
+    "index": [
+      [
+        "tenant_id",
+        "item_id",
+        "warehouse_id"
+      ],
+      [
+        "tenant_id",
+        "created_at",
+        "id"
+      ]
+    ],
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "item_id"
+        ],
+        "ref": "item",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      },
+      {
+        "cols": [
+          "tenant_id",
+          "warehouse_id"
+        ],
+        "ref": "warehouse",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
+  },
+  "price_book": {
+    "name": "price_book",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "item_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "price_type",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "price",
+        "t": "money",
+        "notNull": true
+      },
+      {
+        "n": "valid_from",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "valid_to",
+        "t": "time",
+        "notNull": false
+      },
+      {
+        "n": "version",
+        "t": "int",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
       "id"
     ],
     "uniq": [],
     "index": [
       [
-        "user_id"
+        "tenant_id",
+        "item_id",
+        "price_type",
+        "valid_from"
       ],
       [
-        "expires_at"
+        "tenant_id",
+        "created_at",
+        "id"
       ]
     ],
-    "fk": []
+    "fk": [
+      {
+        "cols": [
+          "tenant_id",
+          "item_id"
+        ],
+        "ref": "item",
+        "refCols": [
+          "tenant_id",
+          "id"
+        ]
+      }
+    ]
   },
   "org_membership": {
     "name": "org_membership",
@@ -644,6 +1022,240 @@
         "tenant_id",
         "ref_type",
         "ref_id"
+      ]
+    ],
+    "fk": []
+  },
+  "auth_user": {
+    "name": "auth_user",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "email",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "pwd_hash",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "pwd_salt",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "display_name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [
+      [
+        "email"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
+  "org_tenant": {
+    "name": "org_tenant",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "slug",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "name",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "status",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "plan",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "join_policy",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [
+      [
+        "slug"
+      ]
+    ],
+    "index": [],
+    "fk": []
+  },
+  "platform_settings": {
+    "name": "platform_settings",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "setting_key",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "setting_value",
+        "t": "text",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "setting_key"
+    ],
+    "uniq": [],
+    "index": [],
+    "fk": []
+  },
+  "login_attempt": {
+    "name": "login_attempt",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "kind",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ident",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "ip",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "ok",
+        "t": "bool",
+        "notNull": true
+      },
+      {
+        "n": "at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "ident",
+        "at"
+      ],
+      [
+        "ip",
+        "at"
+      ]
+    ],
+    "fk": []
+  },
+  "auth_session": {
+    "name": "auth_session",
+    "tenant": false,
+    "cols": [
+      {
+        "n": "id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "user_id",
+        "t": "uuid",
+        "notNull": true
+      },
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": false
+      },
+      {
+        "n": "expires_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "ip",
+        "t": "code",
+        "notNull": false
+      },
+      {
+        "n": "ua",
+        "t": "text",
+        "notNull": false
+      },
+      {
+        "n": "created_at",
+        "t": "time",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "id"
+    ],
+    "uniq": [],
+    "index": [
+      [
+        "user_id"
+      ],
+      [
+        "expires_at"
       ]
     ],
     "fk": []
