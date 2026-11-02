@@ -1,8 +1,8 @@
 import * as store from '../store/workbench.mjs'
 
 /** 工作台首页的展示条数（多取一屏，前端不翻页） */
-const RECENT_STAGES = 8
-const TODOS = 5
+const RECENT_STAGES = 5
+const TODOS = 4
 
 /** COUNT(*) 在 PG 里是 bigint 字符串，MySQL 是数字，统一成数字 */
 const n = (/** @type {unknown} */ v) => Number(v ?? 0)

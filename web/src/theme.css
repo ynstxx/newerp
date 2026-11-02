@@ -27,12 +27,12 @@
   /* 尺寸：圆角 / 间距 / 结构 */
   --erp-radius-card: 12px;
   --erp-radius-sm: 8px;
-  --erp-pad-card: 16px;
-  --erp-gap: 16px;
-  --erp-side-w: 220px;
+  --erp-pad-card: 24px;
+  --erp-gap: 24px;
+  --erp-side-w: 240px;
   --erp-side-w-collapsed: 56px;
-  --erp-top-h: 48px;
-  --erp-tabs-h: 40px;
+  --erp-top-h: 56px;
+  --erp-tabs-h: 44px;
 
   color-scheme: dark;
 }

@@ -80,7 +80,7 @@ async function load() {
   overviewErr.value = null
   const [ov, pj] = await Promise.allSettled([
     api.get('/api/workbench'),
-    api.get('/api/projects?limit=6'),
+    api.get('/api/projects?limit=4'),
   ])
 
   if (pj.status === 'fulfilled') {
@@ -317,7 +317,7 @@ onMounted(load)
   align-items: center;
   gap: 6px;
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--erp-text-2);
   min-width: 0;
 }
@@ -351,14 +351,14 @@ onMounted(load)
 }
 .stat-label {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--erp-text-3);
 }
 
 /* 2 项目网格 */
 .grid3 {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--erp-gap);
 }
 .grid3.skel {
@@ -384,7 +384,7 @@ onMounted(load)
 }
 .pcode {
   flex: 1;
-  font-size: 11px;
+  font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--erp-text-3);
 }
@@ -398,7 +398,7 @@ onMounted(load)
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .pamt {
   color: var(--erp-text);
@@ -415,13 +415,13 @@ onMounted(load)
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 12px 6px;
+  gap: 8px;
+  padding: 16px 8px;
   border-radius: var(--erp-radius-sm);
   border: 1px solid var(--erp-border);
   background: rgba(255, 255, 255, 0.025);
   color: var(--erp-text-2);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
 }
 .quick-item:hover {
@@ -430,7 +430,7 @@ onMounted(load)
   background: var(--erp-primary-soft);
 }
 .quick-ico {
-  font-size: 18px;
+  font-size: 20px;
   color: var(--erp-primary);
 }
 .quick-label {
@@ -450,7 +450,7 @@ onMounted(load)
 }
 .timeline :deep(.el-timeline-item__timestamp) {
   color: var(--erp-text-3);
-  font-size: 11px;
+  font-size: 13px;
 }
 .ev {
   display: flex;
@@ -468,7 +468,7 @@ onMounted(load)
 }
 .ev-flow {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .ev-to {
   color: var(--erp-text-2);
