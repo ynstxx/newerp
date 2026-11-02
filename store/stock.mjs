@@ -158,7 +158,7 @@ export const movesBySn = (ctx, itemId, sn) => {
   return q(
     ctx,
     `SELECT ${MOVE_COLS} FROM stock_move
-      WHERE $t AND item_id = $1 AND sn_list LIKE $2 ESCAPE '!'
+      WHERE $t AND item_id = $1 AND UPPER(sn_list) LIKE UPPER($2) ESCAPE '!'
       ORDER BY at ASC, id ASC`,
     [itemId, `%|${escaped}|%`],
   )

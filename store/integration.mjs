@@ -165,6 +165,6 @@ export const listLogs = (ctx, provider, limit) =>
     `SELECT ${LOG} FROM integration_sync_log
       WHERE $t AND provider = $1
       ORDER BY at DESC
-      LIMIT ${Math.max(1, Math.min(100, Number(limit) || 20))}`,
-    [provider],
+      LIMIT $2`,
+    [provider, Math.max(1, Math.min(100, Number(limit) || 20))],
   )

@@ -832,7 +832,7 @@
       },
       {
         "n": "config_value",
-        "t": "code",
+        "t": "text",
         "notNull": true
       },
       {
@@ -1446,10 +1446,6 @@
         "tenant_id",
         "at",
         "id"
-      ],
-      [
-        "tenant_id",
-        "at"
       ]
     ],
     "fk": [

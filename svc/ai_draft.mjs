@@ -399,6 +399,8 @@ export async function apply(ctx, draftId) {
 
         // 重新校验 payload（草稿可能已过期）；makeDraft 只读不写
         const fresh = await tools.makeDraft(name, jsonOf(row.payload), ctx)
+        // nextCode 不能在事务里跑（撞唯一键的重试在 PG aborted 事务上必然失效），
+        // 所以在**进事务前**就把编号取好，再交给业务 svc
         const ref = await applier.apply(tx, fresh.payload)
 
         const now = new Date()

@@ -11,7 +11,8 @@ export const tables = [
     pk: ['tenant_id', 'config_key'],
     cols: [
       { n: 'config_key', t: 'code', notNull: true },
-      { n: 'config_value', t: 'code', notNull: true },
+      // 不能是 code(64)：将来放 JSON 或长描述的开关会同时撞 PG 22001 / MySQL 1406
+      { n: 'config_value', t: 'text', notNull: true },
       { n: 'updated_at', t: 'time', notNull: true },
     ],
   },

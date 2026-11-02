@@ -271,12 +271,13 @@ export const issueInsert = (ctx, p) =>
  * @param {any} ctx
  * @param {{ id: string, issueId: string, itemId: string, qty: string, unitCost: string | null, note: string | null }} p
  */
+/** @param {any} ctx @param {{ id: string, issueId: string, itemId: string, qty: string, unitCost: string | null, note: string | null, now: Date }} p */
 export const issueLineInsert = (ctx, p) =>
   exec(
     ctx,
     `INSERT INTO material_issue_line (tenant_id, id, issue_id, item_id, qty, unit_cost, note, version, created_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8)`,
-    [ctx.tenantId, p.id, p.issueId, p.itemId, p.qty, p.unitCost, p.note, new Date()],
+    [ctx.tenantId, p.id, p.issueId, p.itemId, p.qty, p.unitCost, p.note, p.now],
   )
 
 /** @param {any} ctx @param {string} issueId */

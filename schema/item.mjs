@@ -92,8 +92,8 @@ export const tables = [
     index: [
       ['warehouse_id', 'item_id', 'at'],
       ['ref_type', 'ref_id'],
+      // ['at'] 是 ['at','id'] 的前缀，建了没用
       ['at', 'id'],
-      ['at'],
     ],
     fk: [
       { cols: ['warehouse_id'], ref: 'warehouse' },

@@ -16,7 +16,7 @@
 | # | 项 | 为什么 | 何时做 |
 |---|---|---|---|
 | 5 | 手写 SMTP 客户端（≈250 行） | 需要真实 SMTP 服务器才能验，假服务器验不出 MIME 编码/中文头的问题 | 有内网自托管客户时 |
-| 6 | `tenant_quota` / `sys_config` / `sys_file` 三张表 | 仍然没有使用者（配额检查、租户级配置、附件） | 各自第一个使用者出现时 |
+| 6 | `tenant_quota` / `sys_file` 两张表 | 仍然没有使用者（配额检查、附件）。`sys_config` 已在第 4 波落地（自动编号开关） | 各自第一个使用者出现时 |
 | 7 | `scope='own'/'dept'` 数据范围 | 目前列表只按 `$t` 过滤；`ctx.role.scope` 读了但没用 | 有「只能看自己负责的」真实诉求时（M3/M4 上量后） |
 | 8 | 计费 / 订阅 | DESIGN 明确 v1 不做 | v2 |
 | 9 | 页码式分页（带总数） | 游标分页没有 total，大表 OFFSET 会慢 | UI 明确要「第 N 页/共 M 条」时，加 `count(*)` 单独接口 |
@@ -56,3 +56,11 @@
 | 26 | 权限点两处疑似漏授（审计 G5） | `stock:move` 与 `ai:chat` 的动作名不在 member 的 `*:view/create/update` 里 → 成员不能手工出入库、不能用 AI 对话 | 确认是否有意；要放开就改成 `stock:create` / `ai:create` |
 | 27 | 跨租户外键返回 400 而非 404（审计 G6） | 响应与「陌生 uuid」字节级相同（不泄漏存在性），但与 §4.3「一律 404」不一致；两种风格并存 | 统一成 404 |
 | 28 | `POST /api/notify/test` 只要求登录（审计 G7） | 任何成员可用本租户已配的渠道（含群机器人 webhook / SMTP）发真实消息 | 提到 `notify:config` |
+
+## 第 4 波审计后新增（双库）
+
+| # | 缺口 | 现状 | 何时做 |
+|---|---|---|---|
+| 29 | 删除物料/仓库不做引用检查（审计 B8） | 带引用删除会冒外键错误成 500（两库错误码还不同）；同仓 `store/service_contract.mjs` 的 `refs()` 已有正确范式 | 给 `deleteItem`/`warehouseRemove` 照抄 `refs()`，有引用返回 409 |
+| 30 | `notify_outbox` 的领取查询用不上索引（审计 B11） | 三个索引都以 `tenant_id` 打头，worker 是跨租户查 `WHERE status/next_retry_at`，两库都会退化扫描 | 给 outbox 加 `(status, next_retry_at)` 全局索引（生成器需支持非租户前缀的附加索引） |
+| 31 | `svc/service_contract` 的 amount 未归一（审计 B9） | 靠 `api/service.mjs` 的 `moneyOfInput` 兜；被内部调用（AI 工具/其它 svc）绕过 api 时，三位小数会直接进 numeric | svc 入口统一 `moneyOf(centsOf(v))` |

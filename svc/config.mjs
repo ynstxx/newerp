@@ -1,3 +1,4 @@
+import { withTx } from '../db/index.mjs'
 import * as store from '../store/config.mjs'
 
 /**
@@ -49,7 +50,9 @@ export async function isCodeAuto(ctx) {
  */
 export async function set(ctx, key, value) {
   if (!(key in DEFAULTS)) throw new Error(`未知配置项 ${key}`)
-  await store.put(ctx, key, value)
+  // S4：UPDATE 与 INSERT 必须在一个事务里，否则两个管理员并发首写会双双 UPDATE 0 行、
+  // 双双 INSERT 撞唯一键 → 500。store.put 的「先 UPDATE 再 INSERT」也要求调用方带事务。
+  await withTx(ctx, (tx) => store.put(tx, key, value))
   // 本进程立即生效；别的实例最长 30 秒
   cache.delete(String(ctx?.tenantId ?? ''))
 }

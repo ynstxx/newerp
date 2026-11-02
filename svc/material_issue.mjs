@@ -182,7 +182,7 @@ export async function createMaterialIssue(ctx, input) {
   await withTx(ctx, async (tx) => {
     await store.issueInsert(tx, row)
     for (const l of lines) {
-      await store.issueLineInsert(tx, { id: randomUUID(), issueId: row.id, ...l })
+      await store.issueLineInsert(tx, { id: randomUUID(), issueId: row.id, ...l, now })
     }
     await audit.insert(tx, {
       id: randomUUID(),
@@ -239,7 +239,7 @@ export async function updateMaterialIssue(ctx, id, patch) {
     if (!n) throw new HttpError(errors.conflict, { reason: '并发修改，请重试' })
     if (lines) {
       await store.issueLinesClear(tx, id)
-      for (const l of lines) await store.issueLineInsert(tx, { id: randomUUID(), issueId: id, ...l })
+      for (const l of lines) await store.issueLineInsert(tx, { id: randomUUID(), issueId: id, ...l, now })
     }
     await audit.insert(tx, {
       id: randomUUID(),

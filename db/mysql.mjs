@@ -33,6 +33,17 @@ export async function createAdapter() {
     bigNumberStrings: true,
     typeCast,
     charset: 'utf8mb4',
+    // 显式钉 FOUND_ROWS：否则 affectedRows 是「实际变更行数」，写同值返回 0 →
+    // 被误判成「行不存在」→ 走 INSERT → 撞唯一键。全仓的 UPDATE-then-INSERT 都押在这上面。
+    flags: ['FOUND_ROWS'],
+  })
+
+  // S1：DESIGN §6.2 要求两库统一 READ COMMITTED，但 MySQL 默认是 REPEATABLE READ。
+  // 不钉死的话，「事务外读 + 事务内锁」这类写法在 MySQL 下看到的快照可能比 PG 旧，
+  // RR 的间隙锁还会让「UPDATE 0 行再 INSERT」多出一堆死锁。每条新连接都设一次。
+  pool.on('connection', (conn) => {
+    // 原生连接是回调式 API；不要在这里留 promise（池结束时会让事件循环挂住）
+    /** @type {any} */ (conn).query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED', () => {})
   })
 
   /** @type {(c: any) => any} */

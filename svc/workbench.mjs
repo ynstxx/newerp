@@ -1,3 +1,4 @@
+import { centsOf, moneyOf } from '../http/money.mjs'
 import * as store from '../store/workbench.mjs'
 
 /** 工作台首页的展示条数（多取一屏，前端不翻页） */
@@ -8,7 +9,8 @@ const TODOS = 4
 const n = (/** @type {unknown} */ v) => Number(v ?? 0)
 
 /** money 两库都返回字符串，对外统一两位小数字符串 */
-const money = (/** @type {unknown} */ v) => Number(v ?? 0).toFixed(2)
+// 金额一律走分算法，不用浮点 toFixed（1.005 会变 1.00）
+const money = (/** @type {unknown} */ v) => moneyOf(centsOf(String(v ?? '0')))
 
 /**
  * 首页聚合：四个计数 + 合同总额 + 最近状态流水 + 待签约清单。
