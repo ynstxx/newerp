@@ -326,10 +326,11 @@ function onCommand(cmd) {
   margin-top: 14px;
 }
 /* 分组头是"可点的一行"，不是一段小字：给它和菜单项一样的命中区与 hover 反馈 */
+/* 分组头和菜单项用同一把尺子：同高、同缩进、同圆角、同上下间距 */
 .grp-head {
   width: calc(100% - 24px);
-  margin: 0 12px;
-  height: 38px;
+  margin: 5px 12px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -371,10 +372,7 @@ function onCommand(cmd) {
 .chev.open {
   transform: rotate(0deg);
 }
-/* 展开的分组，标题与下面菜单项之间留一口气 */
-.grp-head + .items {
-  margin-top: 4px;
-}
+
 .items {
   list-style: none;
   margin: 0;
