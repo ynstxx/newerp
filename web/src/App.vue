@@ -14,6 +14,25 @@ import ProjectListView from './views/ProjectListView.vue'
 import QuotationListView from './views/QuotationListView.vue'
 import ContractListView from './views/ContractListView.vue'
 import ComingSoonView from './views/ComingSoonView.vue'
+import InboxView from './views/InboxView.vue'
+import ApprovalCenterView from './views/ApprovalCenterView.vue'
+import ApprovalFlowView from './views/ApprovalFlowView.vue'
+import NotifySettingsView from './views/NotifySettingsView.vue'
+import WorkPlanView from './views/WorkPlanView.vue'
+import MaterialIssueView from './views/MaterialIssueView.vue'
+import ChangeOrderView from './views/ChangeOrderView.vue'
+import AcceptanceView from './views/AcceptanceView.vue'
+import LaborHourView from './views/LaborHourView.vue'
+import PurchaseOrderView from './views/PurchaseOrderView.vue'
+import GoodsReceiptView from './views/GoodsReceiptView.vue'
+import SubcontractView from './views/SubcontractView.vue'
+import LedgerView from './views/LedgerView.vue'
+import ProfitView from './views/ProfitView.vue'
+import TicketView from './views/TicketView.vue'
+import ServiceContractView from './views/ServiceContractView.vue'
+import IntegrationView from './views/IntegrationView.vue'
+import AiChatView from './views/AiChatView.vue'
+import AiDraftView from './views/AiDraftView.vue'
 
 const booted = ref(false)
 const collapsed = ref(false)
@@ -141,6 +160,25 @@ function onSearch(kw) {
     <QuotationListView v-else-if="active === 'quotation'" :key="viewKey" />
     <ContractListView v-else-if="active === 'contract'" :key="viewKey" />
     <!-- 仍是占位的只剩「成员」（菜单里置灰，走不到这里，留作兜底） -->
+    <InboxView v-else-if="active === 'inbox'" :key="viewKey" />
+    <ApprovalCenterView v-else-if="active === 'approvals'" :key="viewKey" />
+    <ApprovalFlowView v-else-if="active === 'approvalFlows'" :key="viewKey" />
+    <NotifySettingsView v-else-if="active === 'notifySettings'" :key="viewKey" />
+    <WorkPlanView v-else-if="active === 'workPlans'" :key="viewKey" />
+    <MaterialIssueView v-else-if="active === 'materialIssues'" :key="viewKey" />
+    <ChangeOrderView v-else-if="active === 'changeOrders'" :key="viewKey" />
+    <AcceptanceView v-else-if="active === 'acceptances'" :key="viewKey" />
+    <LaborHourView v-else-if="active === 'laborHours'" :key="viewKey" />
+    <PurchaseOrderView v-else-if="active === 'purchaseOrders'" :key="viewKey" />
+    <GoodsReceiptView v-else-if="active === 'goodsReceipts'" :key="viewKey" />
+    <SubcontractView v-else-if="active === 'subcontracts'" :key="viewKey" />
+    <LedgerView v-else-if="active === 'ledgers'" :key="viewKey" />
+    <ProfitView v-else-if="active === 'profit'" :key="viewKey" />
+    <TicketView v-else-if="active === 'tickets'" :key="viewKey" />
+    <ServiceContractView v-else-if="active === 'serviceContracts'" :key="viewKey" />
+    <IntegrationView v-else-if="active === 'integrations'" :key="viewKey" />
+    <AiChatView v-else-if="active === 'aiChat'" :key="viewKey" />
+    <AiDraftView v-else-if="active === 'aiDrafts'" :key="viewKey" />
     <ComingSoonView v-else :key="viewKey" :name="active" @open="openTab" />
   </AppShell>
 </template>

@@ -1,4 +1,5 @@
 import * as notify from './notify.mjs'
+import * as events from './approval_events.mjs'
 import * as store from '../store/approval.mjs'
 
 /**
@@ -81,11 +82,12 @@ export async function emitPending(ctx, instance) {
   const recipients = await recipientsForStep(ctx, instance)
   if (!recipients.length) return
   await notify.emit(ctx, 'approval.pending', {
+    // docType 必须走顶层：notify.emit 会用 opts.docType 覆盖 vars.docType（它还用它填 ref_type）
+    docType: label(instance),
     docId: String(pick(instance, 'doc_id', 'docId') ?? ''),
     step: String(pick(instance, 'current_step', 'currentStep') ?? ''),
     recipients,
     vars: {
-      docType: label(instance),
       amount: instance.amount,
       stepNo: pick(instance, 'current_step', 'currentStep'),
       docId: pick(instance, 'doc_id', 'docId'),
@@ -107,8 +109,25 @@ export async function emitFinished(ctx, instance, action) {
   const event =
     action === 'approve' ? 'approval.approved' : action === 'reject' ? 'approval.rejected' : 'approval.failed'
   await notify.emit(ctx, event, {
+    docType: label(instance),
     docId: String(pick(instance, 'doc_id', 'docId') ?? ''),
     recipients: [{ userId: submitter }],
-    vars: { docType: label(instance), amount: instance.amount, result: event },
+    vars: { amount: instance.amount, result: event },
+  })
+}
+
+/**
+ * 挂到审批域的事件口子上。启动时由 cmd/server.mjs 调用，测试里由 test/helpers.mjs 调用。
+ * 不放模块顶层：谁 import 谁就要承担副作用，那样没法只测审批不测通知。
+ */
+export function install() {
+  events.on('submitted', (ctx, instance) => emitPending(ctx, instance))
+  events.on('decided', async (ctx, payload) => {
+    const inst = payload?.instance
+    if (!inst) return
+    if (inst.status === 'pending') return emitPending(ctx, inst)
+    if (inst.status === 'rejected') return emitFinished(ctx, inst, 'reject')
+    if (inst.status === 'failed') return emitFinished(ctx, inst, 'failed')
+    return emitFinished(ctx, inst, 'approve')
   })
 }

@@ -13,6 +13,7 @@ import { createInvite, register, registerInfo } from '../api/registration.mjs'
 import * as party from '../api/party.mjs'
 import * as session from '../auth/session.mjs'
 import * as notifyWorker from '../svc/notify_worker.mjs'
+import { install as installApprovalNotify } from '../svc/approval_notify.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
 /**
@@ -97,6 +98,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error(`listen ${config.host}:${config.port} failed:`, err.message)
     process.exit(1)
   })
+  // 审批事件 → 通知：挂在 svc 层的事件口子上，业务域自己的 submit 端点也能命中
+  installApprovalNotify()
   server.listen(config.port, config.host, () => {
     // 通知 outbox worker：单进程内轮询，DB 当日志队列
     notifyWorker.start()

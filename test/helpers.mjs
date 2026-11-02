@@ -1,5 +1,6 @@
 import { once } from 'node:events'
 import { buildRouter, createApp } from '../cmd/server.mjs'
+import { install as installApprovalNotify } from '../svc/approval_notify.mjs'
 import { close } from '../db/index.mjs'
 
 /**
@@ -11,6 +12,8 @@ import { close } from '../db/index.mjs'
  * @param {(router: any) => void} [register]
  */
 export async function makeApp(register) {
+  // 与 cmd/server.mjs 一致：把审批事件接到通知上
+  installApprovalNotify()
   const router = buildRouter()
   if (register) register(router)
   const server = createApp(router).listen(0, '127.0.0.1')

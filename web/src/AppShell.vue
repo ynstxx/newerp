@@ -3,19 +3,30 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   ArrowDown,
   Bell,
+  Calendar,
+  Checked,
   Close,
+  Coin,
   Document,
   Expand,
+  Files,
   Fold,
   Folder,
+  MagicStick,
   Memo,
+  Message,
   Odometer,
   OfficeBuilding,
   Refresh,
   Search,
+  Setting,
+  ShoppingCart,
   Tickets,
+  Tools,
   TrendCharts,
   User,
+  Van,
+  Wallet,
 } from '@element-plus/icons-vue'
 import { t } from './i18n.js'
 import { state } from './state.js'
@@ -34,7 +45,10 @@ const groups = [
   {
     key: 'overview',
     label: 'menu.groupOverview',
-    items: [{ key: 'workbench', label: 'menu.workbench', icon: Odometer }],
+    items: [
+      { key: 'workbench', label: 'menu.workbench', icon: Odometer },
+      { key: 'inbox', label: 'menu.inbox', icon: Bell },
+    ],
   },
   {
     key: 'business',
@@ -51,6 +65,54 @@ const groups = [
     items: [
       { key: 'quotation', label: 'menu.quotation', icon: Tickets },
       { key: 'contract', label: 'menu.contract', icon: Memo },
+    ],
+  },
+  {
+    key: 'approval',
+    label: 'menu.groupApproval',
+    items: [
+      { key: 'approvals', label: 'menu.approvals', icon: Checked },
+      { key: 'approvalFlows', label: 'menu.approvalFlows', icon: Files },
+      { key: 'notifySettings', label: 'menu.notifySettings', icon: Setting },
+    ],
+  },
+  {
+    key: 'work',
+    label: 'menu.groupWork',
+    items: [
+      { key: 'workPlans', label: 'menu.workPlans', icon: Calendar },
+      { key: 'materialIssues', label: 'menu.materialIssues', icon: Van },
+      { key: 'changeOrders', label: 'menu.changeOrders', icon: Document },
+      { key: 'acceptances', label: 'menu.acceptances', icon: Checked },
+      { key: 'laborHours', label: 'menu.laborHours', icon: Tools },
+    ],
+  },
+  {
+    key: 'purchase',
+    label: 'menu.groupPurchase',
+    items: [
+      { key: 'purchaseOrders', label: 'menu.purchaseOrders', icon: ShoppingCart },
+      { key: 'goodsReceipts', label: 'menu.goodsReceipts', icon: Van },
+      { key: 'subcontracts', label: 'menu.subcontracts', icon: Files },
+      { key: 'ledgers', label: 'menu.ledgers', icon: Wallet },
+      { key: 'profit', label: 'menu.profit', icon: Coin },
+    ],
+  },
+  {
+    key: 'service',
+    label: 'menu.groupService',
+    items: [
+      { key: 'tickets', label: 'menu.tickets', icon: Message },
+      { key: 'serviceContracts', label: 'menu.serviceContracts', icon: Memo },
+    ],
+  },
+  {
+    key: 'platform',
+    label: 'menu.groupPlatform',
+    items: [
+      { key: 'integrations', label: 'menu.integrations', icon: MagicStick },
+      { key: 'aiChat', label: 'menu.aiChat', icon: Message },
+      { key: 'aiDrafts', label: 'menu.aiDrafts', icon: Files },
     ],
   },
   {

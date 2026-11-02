@@ -371,7 +371,8 @@ test('worker stop() 后不再取任务，也没有悬挂 timer', async (t) => {
   const worker = createWorker({ intervalMs: 20 })
   worker.start()
   assert.equal(worker.running, true)
-  await new Promise((r) => setTimeout(r, 60))
+  // 全量套件下这个文件会和别的测试抢同一个库，20ms 轮询 + 60ms 等待容易踩到调度抖动
+  await new Promise((r) => setTimeout(r, 120))
   await worker.stop()
   assert.equal(worker.running, false)
 
@@ -381,7 +382,7 @@ test('worker stop() 后不再取任务，也没有悬挂 timer', async (t) => {
     recipients: [{ userId: userA }],
     vars: { docNo: 'PO-stop' },
   })
-  await new Promise((r) => setTimeout(r, 150))
+  await new Promise((r) => setTimeout(r, 400))
 
   const keys = [
     keyOf({ channel: 'email', templateCode: 'approval.pending', docId, toAddr: ownerA }),

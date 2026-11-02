@@ -4,6 +4,7 @@ import { HttpError, errors } from '../http/errors.mjs'
 import { centsOf, moneyOf } from '../http/money.mjs'
 import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
+import * as approvalEvents from './approval_events.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/approval.mjs'
 import * as org from '../store/approval_org.mjs'
@@ -464,7 +465,10 @@ export async function submit(ctx, input) {
       at: now,
     })
   })
-  return getInstance(ctx, id)
+  const created = await getInstance(ctx, id)
+  // 事务已提交；通知失败不影响审批本身
+  await approvalEvents.emit('submitted', ctx, created)
+  return created
 }
 
 /**
@@ -653,8 +657,13 @@ export async function decide(ctx, taskId, input) {
     })
   })
   // 业务落库失败：审批单已按 failed 提交，错误照样往外抛（不吞）
-  if (hookError) throw hookError
-  return getInstance(ctx, inst.id)
+  if (hookError) {
+    await approvalEvents.emit('decided', ctx, { instance: await getInstance(ctx, inst.id), action })
+    throw hookError
+  }
+  const done = await getInstance(ctx, inst.id)
+  await approvalEvents.emit('decided', ctx, { instance: done, action })
+  return done
 }
 
 /**
