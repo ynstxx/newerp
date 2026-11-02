@@ -10,6 +10,10 @@ import { health } from '../api/health.mjs'
 import { login, logout, me } from '../api/auth.mjs'
 import { createInvite, register, registerInfo } from '../api/registration.mjs'
 import * as party from '../api/party.mjs'
+import { register as registerM1a } from '../api/routes-a.mjs'
+import { register as registerM1b } from '../api/routes-b.mjs'
+import { register as registerM1c } from '../api/routes-c.mjs'
+import { register as registerM1d } from '../api/routes-d.mjs'
 import * as session from '../auth/session.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
@@ -31,6 +35,11 @@ export function buildRouter() {
   router.get('/api/parties/:id', party.get)
   router.patch('/api/parties/:id', party.update)
   router.del('/api/parties/:id', party.remove)
+  // M1 项目主链：每个切片自己挂路由，本文件只负责叫它们进来
+  registerM1a(router)
+  registerM1b(router)
+  registerM1c(router)
+  registerM1d(router)
   return router
 }
 

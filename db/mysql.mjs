@@ -4,9 +4,9 @@ import { config } from '../config.mjs'
 /** @param {any} row */
 function normalizeRow(row) {
   for (const k of Object.keys(row)) {
-    const v = row[k]
-    if (v instanceof Date) row[k] = v.toISOString()
-    else if (Buffer.isBuffer(v)) row[k] = v.toString('utf8')
+    // 时间戳保持 Date（与 PG 一致，且读-改-写回 datetime(3) 才不会被 ISO 格式卡住）；
+    // 只处理二进制列
+    if (Buffer.isBuffer(row[k])) row[k] = row[k].toString('utf8')
   }
   return row
 }

@@ -1,15 +1,6 @@
 import pg from 'pg'
 import { config } from '../config.mjs'
 
-/** @param {any} row */
-function normalizeRow(row) {
-  for (const k of Object.keys(row)) {
-    const v = row[k]
-    if (v instanceof Date) row[k] = v.toISOString()
-  }
-  return row
-}
-
 export async function createAdapter() {
   const pool = new pg.Pool({
     host: config.db.host,
@@ -26,7 +17,9 @@ export async function createAdapter() {
     /** @param {string} sql @param {unknown[]} [args] */
     async all(sql, args = []) {
       const r = await c.query(sql, args)
-      return r.rows.map(normalizeRow)
+      // 时间戳原样返回 Date：两个驱动都是 Date，读出来再写回去才不会踩格式差异
+      // （response 层 JSON.stringify 会自己转成 ISO，对外形状不变）
+      return r.rows
     },
     /** @param {string} sql @param {unknown[]} [args] */
     async run(sql, args = []) {

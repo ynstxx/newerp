@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import { assertTransition, allowedNext } from './transition.mjs'
+import { PROJECT_TRANSITIONS } from './project.mjs'
 import * as audit from '../store/audit.mjs'
 import * as store from '../store/contract.mjs'
 
@@ -166,10 +167,11 @@ export async function advanceContract(ctx, id, to) {
     if (!n) throw new HttpError(errors.conflict, { reason: '并发修改，请重试' })
 
     if (to === 'signed') {
+      // 项目侧也必须走自己的状态机：项目不在「报价中」就直接签约 = 跳级，拒绝，
+      // 否则项目历史里会凭空多出一条 designing→signed（M1 的验收要求正是“不可跳级”）。
+      assertTransition('project', PROJECT_TRANSITIONS, project.status, 'signed')
       const p = await store.markProjectSigned(tx, { projectId: cur.project_id, now })
       if (!p) throw new HttpError(errors.notFound)
-      // 契约要求补 quoting→signed；正常流程 project.status 就是 quoting，
-      // 这里取**实际**状态做 from_status，避免跳级推进时在历史里留假记录。
       await store.insertStageLog(tx, {
         id: randomUUID(),
         projectId: cur.project_id,
