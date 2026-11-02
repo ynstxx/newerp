@@ -13,19 +13,26 @@ import * as party from '../api/party.mjs'
 import * as session from '../auth/session.mjs'
 import { tenant } from '../auth/tenant.mjs'
 
-const router = createRouter()
-router.get('/healthz', health)
-router.post('/api/auth/login', login)
-router.post('/api/auth/logout', logout)
-router.get('/api/auth/register-info', registerInfo)
-router.post('/api/auth/register', register)
-router.post('/api/invites', createInvite)
-router.get('/api/me', me)
-router.get('/api/parties', party.list)
-router.post('/api/parties', party.create)
-router.get('/api/parties/:id', party.get)
-router.patch('/api/parties/:id', party.update)
-router.del('/api/parties/:id', party.remove)
+/**
+ * 路由总表。各业务域把自己的路由放在 api/routes-<域名>.mjs 的 register(router) 里，
+ * 这样多人/多 Agent 并行时不必抢改这个文件。
+ */
+export function buildRouter() {
+  const router = createRouter()
+  router.get('/healthz', health)
+  router.post('/api/auth/login', login)
+  router.post('/api/auth/logout', logout)
+  router.get('/api/auth/register-info', registerInfo)
+  router.post('/api/auth/register', register)
+  router.post('/api/invites', createInvite)
+  router.get('/api/me', me)
+  router.get('/api/parties', party.list)
+  router.post('/api/parties', party.create)
+  router.get('/api/parties/:id', party.get)
+  router.patch('/api/parties/:id', party.update)
+  router.del('/api/parties/:id', party.remove)
+  return router
+}
 
 /** @type {import('../http/middleware.mjs').Middleware} */
 async function authSession(ctx, next) {
@@ -33,27 +40,34 @@ async function authSession(ctx, next) {
   await next()
 }
 
-/** @type {import('../http/middleware.mjs').Middleware} */
-async function dispatch(ctx) {
-  const hit = router.resolve(ctx.req.method ?? 'GET', ctx.path)
-  if (!hit) {
-    // 路由没命中再试静态资源（前端构建产物），都没有才 404
-    if (await serveStatic(ctx)) return
-    throw new HttpError(errors.notFound)
+/**
+ * @param {any} [router] 可注入路由表（测试时把尚未挂进总表的切片路由接进来）
+ */
+function makeDispatch(router) {
+  /** @type {import('../http/middleware.mjs').Middleware} */
+  return async function dispatch(ctx) {
+    const hit = router.resolve(ctx.req.method ?? 'GET', ctx.path)
+    if (!hit) {
+      // 路由没命中再试静态资源（前端构建产物），都没有才 404
+      if (await serveStatic(ctx)) return
+      throw new HttpError(errors.notFound)
+    }
+    if ('allow' in hit) {
+      ctx.res.setHeader('allow', hit.allow.join(', '))
+      throw new HttpError(errors.methodNotAllowed)
+    }
+    ctx.params = hit.params
+    await hit.handler(ctx)
   }
-  if ('allow' in hit) {
-    ctx.res.setHeader('allow', hit.allow.join(', '))
-    throw new HttpError(errors.methodNotAllowed)
-  }
-  ctx.params = hit.params
-  await hit.handler(ctx)
 }
 
 // 顺序：recover → requestId → log → 会话 → 租户 → 路由
 // DESIGN §5 把租户排在认证前；这里对调，因为 membership 校验需要 userId。
-const pipeline = compose([recover, requestId, log, authSession, tenant, dispatch])
-
-export function createApp() {
+/**
+ * @param {any} [router] 可注入路由表（测试时把尚未挂进总表的切片路由接进来）
+ */
+export function createApp(router = buildRouter()) {
+  const pipeline = compose([recover, requestId, log, authSession, tenant, makeDispatch(router)])
   return http.createServer((req, res) => {
     void pipeline(createContext(req, res))
   })
