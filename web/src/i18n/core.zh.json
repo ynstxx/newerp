@@ -58,7 +58,8 @@
     "serviceContracts": "服务合同",
     "integrations": "外部集成",
     "aiChat": "AI 对话",
-    "aiDrafts": "AI 草稿"
+    "aiDrafts": "AI 草稿",
+    "settings": "系统设置"
   },
   "top": {
     "search": "搜索项目、客户、合同",
@@ -257,5 +258,18 @@
     "autoNote": "合同由已接受的报价生成，不在此处新建",
     "empty": "还没有合同，报价被接受后可生成",
     "hint": "签约会同时把项目置为已签约"
+  },
+  "sys": {
+    "hint": "这些开关只影响本公司，别的公司不受影响",
+    "item": "配置项",
+    "key": "键",
+    "value": "开关",
+    "effect": "说明",
+    "empty": "没有可配置项",
+    "saved": "已保存",
+    "refresh": "刷新",
+    "codeAutoOn": "新建单据时自动生成编号（CUS-2026-0001 这种）",
+    "codeAutoOff": "关闭后新建单据必须手工填写编号",
+    "footHint": "改动立即生效（其他实例最长 30 秒）"
   }
 }

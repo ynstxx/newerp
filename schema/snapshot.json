@@ -821,6 +821,39 @@
     "index": [],
     "fk": []
   },
+  "sys_config": {
+    "name": "sys_config",
+    "tenant": true,
+    "cols": [
+      {
+        "n": "config_key",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "config_value",
+        "t": "code",
+        "notNull": true
+      },
+      {
+        "n": "updated_at",
+        "t": "time",
+        "notNull": true
+      },
+      {
+        "n": "tenant_id",
+        "t": "uuid",
+        "notNull": true
+      }
+    ],
+    "pk": [
+      "tenant_id",
+      "config_key"
+    ],
+    "uniq": [],
+    "index": [],
+    "fk": []
+  },
   "integration_conn": {
     "name": "integration_conn",
     "tenant": true,

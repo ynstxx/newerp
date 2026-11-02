@@ -58,7 +58,8 @@
     "serviceContracts": "Service contracts",
     "integrations": "Integrations",
     "aiChat": "AI chat",
-    "aiDrafts": "AI drafts"
+    "aiDrafts": "AI drafts",
+    "settings": "Settings"
   },
   "top": {
     "search": "Search projects, customers, contracts",
@@ -257,5 +258,18 @@
     "autoNote": "Contracts are generated from an accepted quotation — no manual creation",
     "empty": "No contracts yet — accept a quotation to generate one",
     "hint": "Signing also marks the project as signed"
+  },
+  "sys": {
+    "hint": "These switches only affect your company",
+    "item": "Setting",
+    "key": "Key",
+    "value": "Value",
+    "effect": "Effect",
+    "empty": "Nothing to configure",
+    "saved": "Saved",
+    "refresh": "Refresh",
+    "codeAutoOn": "New documents get a generated number (e.g. CUS-2026-0001)",
+    "codeAutoOff": "With this off, new documents must supply a number",
+    "footHint": "Takes effect immediately (other instances within 30s)"
   }
 }

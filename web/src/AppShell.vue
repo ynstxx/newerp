@@ -118,7 +118,10 @@ const groups = [
   {
     key: 'system',
     label: 'menu.groupSystem',
-    items: [{ key: 'member', label: 'menu.member', icon: User, disabled: true }],
+    items: [
+      { key: 'settings', label: 'menu.settings', icon: Setting },
+      { key: 'member', label: 'menu.member', icon: User, disabled: true },
+    ],
   },
 ]
 

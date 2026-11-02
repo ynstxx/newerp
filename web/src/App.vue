@@ -33,6 +33,7 @@ import ServiceContractView from './views/ServiceContractView.vue'
 import IntegrationView from './views/IntegrationView.vue'
 import AiChatView from './views/AiChatView.vue'
 import AiDraftView from './views/AiDraftView.vue'
+import SettingsView from './views/SettingsView.vue'
 
 const booted = ref(false)
 const collapsed = ref(false)
@@ -179,6 +180,7 @@ function onSearch(kw) {
     <IntegrationView v-else-if="active === 'integrations'" :key="viewKey" />
     <AiChatView v-else-if="active === 'aiChat'" :key="viewKey" />
     <AiDraftView v-else-if="active === 'aiDrafts'" :key="viewKey" />
+    <SettingsView v-else-if="active === 'settings'" :key="viewKey" />
     <ComingSoonView v-else :key="viewKey" :name="active" @open="openTab" />
   </AppShell>
 </template>

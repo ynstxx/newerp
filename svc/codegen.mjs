@@ -1,4 +1,6 @@
 import { withTx } from '../db/index.mjs'
+import { HttpError, errors } from '../http/errors.mjs'
+import * as config from './config.mjs'
 import * as seq from '../store/code_seq.mjs'
 
 /**
@@ -12,6 +14,13 @@ import * as seq from '../store/code_seq.mjs'
  * @returns {Promise<string>}
  */
 export async function nextCode(ctx, prefix) {
+  // 租户可以在「系统设置」里关掉自动编号 —— 有些客户有自己的编码体系
+  if (!(await config.isCodeAuto(ctx))) {
+    throw new HttpError(errors.badRequest, {
+      reason: '已关闭自动编号，请手工填写单据编号（系统设置 → 自动编号）',
+      fields: { code: 'required' },
+    })
+  }
   const p = String(prefix).toUpperCase()
   const year = String(new Date().getUTCFullYear())
   let lastError = null
