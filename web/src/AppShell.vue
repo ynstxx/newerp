@@ -322,8 +322,9 @@ function onCommand(cmd) {
   overflow-y: auto;
   padding: 16px 0 20px;
 }
+/* 分组之间只比行间(5+5=10px)多一点：14 → 6，避免整栏看着被切成四段 */
 .grp + .grp {
-  margin-top: 14px;
+  margin-top: 6px;
 }
 /* 分组头是"可点的一行"，不是一段小字：给它和菜单项一样的命中区与 hover 反馈 */
 /* 分组头和菜单项用同一把尺子：同高、同缩进、同圆角、同上下间距 */
