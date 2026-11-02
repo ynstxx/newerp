@@ -115,9 +115,123 @@
   "action": {
     "save": "Save",
     "cancel": "Cancel",
-    "saved": "Saved"
+    "saved": "Saved",
+    "edit": "Edit",
+    "advance": "Advance",
+    "loadMore": "Load more",
+    "noMore": "No more"
   },
   "page": {
     "loaded": "{n} loaded"
+  },
+  "common": {
+    "none": "—",
+    "required": "Please fill in the required fields",
+    "total": "Total",
+    "noMatch": "No matching records",
+    "clientFilter": "search filters loaded rows only"
+  },
+  "ostatus": {
+    "new": "New",
+    "following": "Following",
+    "won": "Won",
+    "lost": "Lost"
+  },
+  "qstatus": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "cstatus": {
+    "draft": "Draft",
+    "signed": "Signed"
+  },
+  "line": {
+    "no": "Line",
+    "item": "Item",
+    "spec": "Spec",
+    "uom": "UOM",
+    "qty": "Qty",
+    "price": "Price",
+    "amount": "Amount"
+  },
+  "oppty": {
+    "search": "Search code, name or customer",
+    "new": "New opportunity",
+    "edit": "Edit opportunity",
+    "code": "Code",
+    "name": "Name",
+    "party": "Customer",
+    "partyPick": "Pick a customer",
+    "partyEmpty": "No customer master data yet",
+    "owner": "Owner",
+    "ownerHint": "Member id, optional",
+    "estAmount": "Estimated amount",
+    "expectedSignAt": "Expected sign date",
+    "stage": "Stage",
+    "updatedAt": "Updated",
+    "note": "Notes",
+    "empty": "No opportunities yet — use New",
+    "hint": "Winning an opportunity creates a project",
+    "wonTip": "Won — a project has been created"
+  },
+  "proj": {
+    "search": "Search code or name",
+    "status": "Status",
+    "code": "Code",
+    "name": "Name",
+    "party": "Customer",
+    "contractAmt": "Contract value",
+    "pm": "Project manager",
+    "pmHint": "Member id, optional",
+    "createdAt": "Created",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "note": "Notes",
+    "edit": "Edit project",
+    "stages": "Stage history",
+    "historyEmpty": "No status changes yet",
+    "autoNote": "Projects are created when an opportunity is won — no manual creation",
+    "empty": "No projects yet — winning an opportunity creates one",
+    "hint": "Signing goes through the contract"
+  },
+  "quo": {
+    "search": "Search code, project or customer",
+    "status": "Status",
+    "code": "Code",
+    "project": "Project code",
+    "version": "Version",
+    "party": "Customer",
+    "amount": "Amount",
+    "sentAt": "Sent at",
+    "detail": "Details",
+    "detailTitle": "Quotation lines",
+    "linesEmpty": "This version has no lines",
+    "autoNote": "Quotations are generated from the solution BOM — no manual creation",
+    "empty": "No quotations yet — confirm a solution to generate one",
+    "hint": "Quotation lines are a BOM snapshot"
+  },
+  "contract": {
+    "search": "Search code, name, project or customer",
+    "status": "Status",
+    "code": "No.",
+    "name": "Name",
+    "project": "Project code",
+    "party": "Customer",
+    "amount": "Amount",
+    "signAt": "Signed at",
+    "detail": "Details",
+    "detailTitle": "Contract details",
+    "lines": "Contract lines",
+    "linesEmpty": "No lines",
+    "terms": "Terms",
+    "termsEmpty": "No terms",
+    "sign": "Sign",
+    "signConfirm": "Sign this contract? It becomes read-only and the related project is set to Signed.",
+    "signed": "Signed",
+    "autoNote": "Contracts are generated from an accepted quotation — no manual creation",
+    "empty": "No contracts yet — accept a quotation to generate one",
+    "hint": "Signing also marks the project as signed"
   }
 }
