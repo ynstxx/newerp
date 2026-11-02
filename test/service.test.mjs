@@ -22,6 +22,8 @@ let app
 /** @type {string} */
 let cookieA = ''
 /** @type {string} */
+let meA = ''
+/** @type {string} */
 let cookieB = ''
 let dbUp = false
 let seq = 0
@@ -42,6 +44,7 @@ test.before(async () => {
   app = await makeApp()
   cookieA = await app.login(emailA, password)
   cookieB = await app.login(emailB, password)
+  meA = (await call('GET', A('/api/me'))).body.user.id
 })
 
 test.after(async () => {
@@ -121,7 +124,8 @@ test('完整链路：建单 → 派工 → 处理中 → 待验证 → 关闭，
   assert.ok(ticket.slaDueAt, '建单时按 response_minutes 算出 SLA 到期')
   assert.deepEqual(ticket.allowed, ['已派工'])
 
-  const engineerId = randomUUID()
+  // 派工人必须是本租户成员（写侧校验，见审计 S1）
+  const engineerId = meA
   const dispatched = await call('POST', A(`/api/tickets/${ticket.id}/dispatch`), {
     engineerId,
     note: '派给张工',
@@ -168,7 +172,7 @@ test('挂起 → 恢复：sla_due_at 往后推，暂停时长写进事件', asyn
   const party = await makeParty('PAUSE')
   const contract = await makeContract(party, { responseMinutes: 30, resolveMinutes: 240 })
   const ticket = await makeTicket(contract)
-  assert.equal((await call('POST', A(`/api/tickets/${ticket.id}/dispatch`), { engineerId: randomUUID() })).status, 200)
+  assert.equal((await call('POST', A(`/api/tickets/${ticket.id}/dispatch`), { engineerId: meA })).status, 200)
   assert.equal((await advance(ticket.id, '处理中')).status, 200)
 
   const before = (await call('GET', A(`/api/tickets/${ticket.id}`))).body
@@ -210,7 +214,7 @@ test('SLA 超时查询：小 response_minutes 能查出，已关闭不出现', a
 
   // 同一合同下再走一条完整链路到关闭，关闭后不能出现在 SLA 超时列表
   const closing = await makeTicket(contract, { reportedAt: new Date(Date.now() - 3600_000).toISOString() })
-  await call('POST', A(`/api/tickets/${closing.id}/dispatch`), { engineerId: randomUUID() })
+  await call('POST', A(`/api/tickets/${closing.id}/dispatch`), { engineerId: meA })
   for (const to of ['处理中', '待验证', '已关闭']) assert.equal((await advance(closing.id, to)).status, 200)
 
   const again = await call('GET', A('/api/sla/overdue'))
@@ -228,7 +232,7 @@ test('满意度只能对已关闭工单登记，否则 409', async (t) => {
   const early = await call('POST', A(`/api/tickets/${ticket.id}/satisfaction`), { score: 5 })
   assert.equal(early.status, 409)
 
-  await call('POST', A(`/api/tickets/${ticket.id}/dispatch`), { engineerId: randomUUID() })
+  await call('POST', A(`/api/tickets/${ticket.id}/dispatch`), { engineerId: meA })
   for (const to of ['处理中', '待验证', '已关闭']) assert.equal((await advance(ticket.id, to)).status, 200)
 
   const ok = await call('POST', A(`/api/tickets/${ticket.id}/satisfaction`), { score: 5, comment: '响应很快' })
@@ -238,6 +242,17 @@ test('满意度只能对已关闭工单登记，否则 409', async (t) => {
 
   const bad = await call('POST', A(`/api/tickets/${ticket.id}/satisfaction`), { score: 6 })
   assert.equal(bad.status, 400)
+})
+
+test('派工人必须是本租户成员：别租户的 user id → 400', async (t) => {
+  if (!dbUp) return t.skip('需要数据库')
+  const meB = (await call('GET', B('/api/me'), undefined, cookieB)).body.user.id
+  const party = await makeParty('XTB')
+  const contract = await makeContract(party)
+  const ticket = await makeTicket(contract)
+  const res = await call('POST', A(`/api/tickets/${ticket.id}/dispatch`), { engineerId: meB })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.error.details.fields.engineerId, 'not_member')
 })
 
 test('跨租户 404、未知字段 400、游标分页不重不漏', async (t) => {

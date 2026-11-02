@@ -3,6 +3,7 @@ import { withTx } from '../db/index.mjs'
 import { HttpError, errors } from '../http/errors.mjs'
 import { trimPage } from '../http/page.mjs'
 import * as audit from '../store/audit.mjs'
+import * as membership from '../store/membership.mjs'
 import * as store from '../store/maintenance.mjs'
 import { contractById } from '../store/ticket.mjs'
 
@@ -146,6 +147,9 @@ export async function createTask(ctx, planId, input) {
   const plan = await store.byId(ctx, assertId(planId))
   if (!plan) throw new HttpError(errors.notFound)
   const assigneeId = input.assigneeId ? assertId(input.assigneeId) : null
+  if (assigneeId && !(await membership.memberExists(ctx, assigneeId))) {
+    throw new HttpError(errors.badRequest, { fields: { assigneeId: 'not_member' } })
+  }
   const now = new Date()
   const id = randomUUID()
   await withTx(ctx, async (tx) => {

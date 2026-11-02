@@ -131,7 +131,8 @@ export async function resolveRecipients(ctx, recipients, docId) {
       const row = await read(ctx, docId)
       if (row?.v) {
         const u = await store.userById(ctx, row.v)
-        if (u) users = [u]
+        // 读取器返回的 user id 也必须是本租户成员：别让单据内容投递到别租户的邮箱
+        if (u && (await store.isMember(ctx, u.id))) users = [u]
       }
     } else {
       throw new HttpError(errors.badRequest, { reason: '收件人需要 userId / role / field 之一' })

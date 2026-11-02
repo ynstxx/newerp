@@ -24,23 +24,24 @@ const externalUserId = (u) => String(u?.userid ?? u?.user_id ?? u?.id ?? '').tri
 
 /**
  * 外部没给邮箱时造一个不可投递的本地登录名；同一外部 id 永远得到同一地址。
- * @param {string} provider @param {string} externalId
+ * @param {string} provider @param {string} externalId @param {string} tenantId
  */
-function fallbackEmail(provider, externalId) {
+function fallbackEmail(provider, externalId, tenantId) {
   const safe = externalId.toLowerCase().replace(/[^a-z0-9._-]/g, '_').slice(0, 20) || 'user'
-  const tail = createHash('sha1').update(externalId).digest('hex').slice(0, 8)
+  // 带上租户短码：两个租户接同一个外部目录时，externalId 相同，不能算出同一个全局邮箱
+  const tail = createHash('sha1').update(`${tenantId}|${externalId}`).digest('hex').slice(0, 8)
   // auth_user.email 是 code(64)，fallback 必须留出余量，否则一个人没邮箱就炸整个事务
   return `${safe}-${tail}@${provider}.local`
 }
 
 /**
  * 外部邮箱也可能超 64 字符；超长时退回不可投递的本地登录名。
- * @param {string} provider @param {string} externalId @param {unknown} rawEmail
+ * @param {string} provider @param {string} externalId @param {unknown} rawEmail @param {string} tenantId
  */
-function localEmail(provider, externalId, rawEmail) {
+function localEmail(provider, externalId, rawEmail, tenantId) {
   const email = rawEmail ? String(rawEmail).trim().toLowerCase() : ''
   if (email && email.length <= 64 && !/[\s\u0000]/.test(email)) return email
-  return fallbackEmail(provider, externalId)
+  return fallbackEmail(provider, externalId, tenantId)
 }
 
 /**
@@ -55,7 +56,12 @@ function localEmail(provider, externalId, rawEmail) {
 async function applyUser(tx, provider, u, at, counts) {
   const map = await store.mapByKey(tx, { provider, externalType: 'user', externalId: u.externalId })
   let user = map ? await store.userById(tx, map.local_id) : null
-  if (!user) user = await store.userByEmail(tx, u.email)
+  if (!user) {
+    // 邮箱是**全局**唯一（auth_user 无 tenant_id）。直接按邮箱认人会把别租户的账户
+    // 认成本租户的人，然后改他名字、把他挂进本租户 —— 必须再断言「已是我方成员」。
+    const byEmail = await store.userByEmail(tx, u.email)
+    if (byEmail && (await store.membershipByUser(tx, byEmail.id))) user = byEmail
+  }
 
   if (!user) {
     const id = randomUUID()
@@ -184,7 +190,7 @@ export async function syncOrg(ctx, provider, opts = {}) {
             {
               externalId,
               name: String(raw.name ?? raw.display_name ?? externalId).slice(0, 64),
-              email: localEmail(p, externalId, raw.email),
+              email: localEmail(p, externalId, raw.email, String(tx.tenantId)),
               active: isActive(raw),
             },
             at,

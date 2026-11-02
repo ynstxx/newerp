@@ -5,6 +5,7 @@ import { trimPage } from '../http/page.mjs'
 import { normCode } from '../http/validate.mjs'
 import { nextCode, PREFIX } from './codegen.mjs'
 import * as audit from '../store/audit.mjs'
+import * as membership from '../store/membership.mjs'
 import * as store from '../store/ticket.mjs'
 import { allowedNext, assertTransition } from './transition.mjs'
 import { extendDue, slaDueAt } from './sla.mjs'
@@ -289,6 +290,10 @@ export async function dispatchTicket(ctx, id, input) {
   const cur = await store.byId(ctx, assertId(id))
   if (!cur) throw new HttpError(errors.notFound)
   const engineerId = assertId(input.engineerId)
+  // engineer_id 指向全局表 auth_user，复合外键保护不到 —— 必须挡别租户的用户 id
+  if (!(await membership.memberExists(ctx, engineerId))) {
+    throw new HttpError(errors.badRequest, { fields: { engineerId: 'not_member' } })
+  }
   if (cur.status !== '待受理' && cur.status !== '已派工') {
     throw new HttpError(errors.conflict, {
       reason: `${cur.status} 的工单不能派工`,

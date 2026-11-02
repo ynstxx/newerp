@@ -45,3 +45,14 @@
 | 20 | `invoice.status` 是死列（永远 `issued`） | 没有作废/红冲路径，也不返回 `allowed` | 做红冲时一起做 |
 | 21 | 在途审批缺唯一约束（`(doc_type, doc_id)` 只能一个 pending） | 靠应用层 `pendingInstanceByDoc` 读后写 + 各单据状态守卫拼出来 | 加部分唯一索引（PG `WHERE status='pending'`，MySQL 用生成列——注意生成列在禁用清单里，需重新评估） |
 | 22 | 编号空洞 | `code_seq` 自增独立提交，单据随后回滚会留下号码空洞 | 可接受（发票类单据需要连续号时才处理） |
+
+## 第 4 波审计后新增（租户）
+
+| # | 缺口 | 现状 | 何时做 |
+|---|---|---|---|
+| 23 | **防线二守卫的四处盲区**（审计 G2） | ① `tenant-free` 是纯子串判断，注释里写一句就能整条豁免；② INSERT 例外只看列清单有没有 `tenant_id`，看不到值来自哪；③ 全局表 `auth_user` 完全在扫描范围外 —— 通讯录跨租户改写账户（已修）就是从这里溜过去的 | 收紧为「标记必须带非空理由」+ 增加 `GLOBAL_WRITE` 白名单（写 `auth_user` 必须同函数内有 `memberExists` 或带标记） |
+| 24 | 公共 `POST /api/approvals` 不校验单据归属（审计 G1） | 任何成员可为任意（含不存在/别租户的）docId 造审批实例；钩子 0 行静默变幽灵审批，还能按 docId 刷通知 | 加 `verify(docType, ctx, docId)` 注册表，与 `onApproved` 同处；至少先做 docType 白名单 |
+| 25 | 缓存与编号缺跨租户回归（审计 G4） | `config` / `codegen` 的用例都是单租户，`code_seq` 唯一键被改成不带 tenant_id 也不会红 | 补「A 关自动编号 → B 仍自动」「A、B 各自从 0001 起」 |
+| 26 | 权限点两处疑似漏授（审计 G5） | `stock:move` 与 `ai:chat` 的动作名不在 member 的 `*:view/create/update` 里 → 成员不能手工出入库、不能用 AI 对话 | 确认是否有意；要放开就改成 `stock:create` / `ai:create` |
+| 27 | 跨租户外键返回 400 而非 404（审计 G6） | 响应与「陌生 uuid」字节级相同（不泄漏存在性），但与 §4.3「一律 404」不一致；两种风格并存 | 统一成 404 |
+| 28 | `POST /api/notify/test` 只要求登录（审计 G7） | 任何成员可用本租户已配的渠道（含群机器人 webhook / SMTP）发真实消息 | 提到 `notify:config` |
